@@ -1,0 +1,78 @@
+services:
+  db:
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    container_name: ${INSTANCE_NAME}
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_USER_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - mealplanner_db_data:/var/lib/postgresql/data
+    networks:
+      - mealplanner_backend_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        CACHE_BUST: ${CACHE_BUST:-1}
+      ssh:
+        - default
+    env_file:
+      - .env
+    container_name: meal-planner-backend
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT}
+      HOST: ${HOST}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_USER_PASSWORD: ${DB_USER_PASSWORD}
+      # JWT_SECRET: ${JWT_SECRET}
+      INSTANCE_NAME: ${INSTANCE_NAME}
+      PROJECT_ID: ${PROJECT_ID}
+      DRIVER_NAME: ${DRIVER_NAME}
+    ports:
+      - "8010:8010"
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - mealplanner_backend_network
+      - mealplanner_app_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        CACHE_BUST: ${CACHE_BUST:-1}
+      ssh:
+        - default
+    env_file:
+      - .env
+    container_name: meal-planner-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - mealplanner_app_network
+
+volumes:
+  mealplanner_db_data:
+
+networks:
+  mealplanner_backend_network:
+    driver: bridge
+  mealplanner_app_network:
+    driver: bridge

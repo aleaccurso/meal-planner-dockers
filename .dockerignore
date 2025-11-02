@@ -1,0 +1,62 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Docker files
+docker-compose.yml
+docker-compose.*.yml
+.dockerignore
+Dockerfile*
+*.dockerfile
+
+# Environment files
+.env
+.env.*
+.envrc
+
+# SSH keys
+.ssh/
+*.pem
+*.key
+id_rsa*
+
+# Documentation
+README.md
+*.md
+docs/
+CONTRIBUTING.md
+LICENSE
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+Thumbs.db
+.DS_Store
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+.cache/
+
+# Test and coverage
+coverage/
+*.test
+.nyc_output/
+
+# Build artifacts (if any in root)
+dist/
+build/
+*.egg-info/
+

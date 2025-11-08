@@ -1,11 +1,8 @@
 # ---- Build stage ----
-FROM node:18-alpine AS builder
+FROM node:18 AS builder
 
-# Install Git and required dependencies
-RUN apk add --update --no-cache \
-    git \
-    ca-certificates \
-    && rm -rf /var/cache/apk/*
+# Git is pre-installed in Debian-based node image
+# No need to install it separately
 
 # Set working directory
 WORKDIR /app

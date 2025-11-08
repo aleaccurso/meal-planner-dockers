@@ -15,8 +15,9 @@ ARG GITHUB_USERNAME
 RUN echo "Cache bust: ${CACHE_BUST}"
 
 # Clone using HTTPS with token
-RUN if [ -z "$GITHUB_TOKEN" ]; then \
-        echo "ERROR: GITHUB_TOKEN not provided"; \
+RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
+        echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
+        echo "Set them in your .env file or pass them via docker-compose build args"; \
         exit 1; \
     fi && \
     rm -rf /app/* /app/.[!.]* 2>/dev/null || true && \

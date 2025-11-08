@@ -20,13 +20,11 @@ RUN echo "Cache bust: ${CACHE_BUST}"
 # Clone using HTTPS with token
 RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
         echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
-        echo "Set them in your .env file or pass them via docker-compose build args"; \
         exit 1; \
     fi && \
-    git clone --depth 1 -b main \
-    https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner-backend.git . && \
-    git rev-parse HEAD > /tmp/git-commit.txt && \
-    git log -1 --format="📌 Commit: %H - %s"
+    git clone --depth 1 -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner-backend.git . && \
+    rm -rf .git && \
+    git rev-parse HEAD > /tmp/git-commit.txt || true
 
 # Verify repository was cloned
 RUN if [ ! -f go.mod ]; then \

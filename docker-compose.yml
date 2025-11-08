@@ -1,19 +1,21 @@
+version: '3'
+
 services:
   db:
     build:
       context: ./db
       dockerfile: Dockerfile
-    env_file:
-      - /volume1/ProjectsEnvVariables/my-meal-planner/.env
-    container_name: ${INSTANCE_NAME}
+    container_name: meal-planner-db
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_USER_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
       - "${DB_PORT}:5432"
+    env_file:
+      - /volume1/PersonalProjects/meal-planner-dockers/.env
     volumes:
-      - mealplanner_db_data:/var/lib/postgresql/data
+      - /volume1/PersonalProjects/meal-planner-dockers/db-data:/var/lib/postgresql/data
     networks:
       - mealplanner_backend_network
 
@@ -23,10 +25,10 @@ services:
       dockerfile: Dockerfile
       args:
         CACHE_BUST: ${CACHE_BUST:-1}
-      ssh:
-        - default
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        GITHUB_USERNAME: ${GITHUB_USERNAME}
     env_file:
-      - /volume1/ProjectsEnvVariables/my-meal-planner/.env
+      - /volume1/PersonalProjects/meal-planner-dockers/.env
     container_name: meal-planner-backend
     environment:
       ENVIRONMENT: ${ENVIRONMENT}
@@ -36,8 +38,7 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_USER_PASSWORD: ${DB_USER_PASSWORD}
-      # JWT_SECRET: ${JWT_SECRET}
-      INSTANCE_NAME: ${INSTANCE_NAME}
+      INSTANCE_NAME: meal-planner-db
       PROJECT_ID: ${PROJECT_ID}
       DRIVER_NAME: ${DRIVER_NAME}
     ports:
@@ -55,10 +56,10 @@ services:
       dockerfile: Dockerfile
       args:
         CACHE_BUST: ${CACHE_BUST:-1}
-      ssh:
-        - default
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        GITHUB_USERNAME: ${GITHUB_USERNAME}
     env_file:
-      - /volume1/ProjectsEnvVariables/my-meal-planner/.env
+      - /volume1/PersonalProjects/meal-planner-dockers/.env
     container_name: meal-planner-frontend
     ports:
       - "5173:80"
@@ -67,9 +68,6 @@ services:
     restart: unless-stopped
     networks:
       - mealplanner_app_network
-
-volumes:
-  mealplanner_db_data:
 
 networks:
   mealplanner_backend_network:

@@ -1,8 +1,8 @@
 # ---- Build stage ----
-FROM golang:1.24.6-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
-# Install Git and SSH client for cloning
-RUN apk add --no-cache git openssh-client
+# Install Git
+RUN apk add --no-cache git
 
 # Enable automatic toolchain download if needed
 ENV GOTOOLCHAIN=auto
@@ -10,34 +10,33 @@ ENV GOTOOLCHAIN=auto
 # Set working directory
 WORKDIR /app
 
-# Set up SSH known_hosts for GitHub
-RUN mkdir -p -m 0700 ~/.ssh && \
-    ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-# Build arg to invalidate only the git clone layer (doesn't affect other layers)
-# Change this value to fetch latest commits without rebuilding dependencies
-# This is used only for cache-busting, we always clone from 'main' branch
+# Build args
 ARG CACHE_BUST=1
+ARG GITHUB_TOKEN
+ARG GITHUB_USERNAME
+
 RUN echo "Cache bust: ${CACHE_BUST}"
 
-# Clone the repository using SSH (always use 'main' branch)
-# This layer is cached until CACHE_BUST changes
-# Requires SSH agent to be forwarded from host via --mount=type=ssh
-RUN --mount=type=ssh \
-    git clone --depth 1 -b main git@github.com:aleaccurso/meal-planner-backend . && \
+# Clone using HTTPS with token
+RUN if [ -z "$GITHUB_TOKEN" ]; then \
+        echo "ERROR: GITHUB_TOKEN not provided"; \
+        exit 1; \
+    fi && \
+    git clone --depth 1 -b main \
+    https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner-backend.git . && \
     git rev-parse HEAD > /tmp/git-commit.txt && \
     git log -1 --format="📌 Commit: %H - %s"
 
-# Verify that repository was cloned successfully
-RUN if [ ! -d .git ]; then \
-        echo "ERROR: Repository clone failed. Make sure SSH agent is running and key is added." && \
+# Verify repository was cloned
+RUN if [ ! -f go.mod ]; then \
+        echo "ERROR: Repository clone failed."; \
         exit 1; \
     fi
 
-# Download Go modules (cached separately - only rebuilds if go.mod/go.sum change)
+# Download Go modules
 RUN go mod download
 
-# Build your Go binary (cached separately - only rebuilds if source code changes)
+# Build the binary
 RUN go build -o main .
 
 # ---- Runtime stage ----
@@ -45,11 +44,11 @@ FROM alpine:latest
 
 WORKDIR /app
 
-# Copy only the binary from the builder stage
+# Copy binary from builder
 COPY --from=builder /app/main .
 
-# Expose your app port (adjust as needed)
+# Expose port
 EXPOSE 8010
 
-# Run the binary
+# Run
 CMD ["./main"]

@@ -1,47 +1,44 @@
 # ---- Build stage ----
 FROM node:18-alpine AS builder
 
-# Install Git and SSH client for cloning
-RUN apk add --no-cache git openssh-client
-
-# Set up SSH known_hosts for GitHub
-RUN mkdir -p -m 0700 ~/.ssh && \
-    ssh-keyscan github.com >> ~/.ssh/known_hosts
+# Install Git
+RUN apk add --no-cache git
 
 # Set working directory
 WORKDIR /app
 
-# Build arg to invalidate only the git clone layer (doesn't affect other layers)
-# Change this value to fetch latest commits without rebuilding dependencies
-# This is used only for cache-busting, we always clone from 'main' branch
+# Build args
 ARG CACHE_BUST=1
+ARG GITHUB_TOKEN
+ARG GITHUB_USERNAME
+
 RUN echo "Cache bust: ${CACHE_BUST}"
 
-# Clone the latest commit from main branch (always use 'main')
-# This layer is cached until CACHE_BUST changes
-# This uses BuildKit SSH mount to securely access the repository
-RUN --mount=type=ssh \
+# Clone using HTTPS with token
+RUN if [ -z "$GITHUB_TOKEN" ]; then \
+        echo "ERROR: GITHUB_TOKEN not provided"; \
+        exit 1; \
+    fi && \
     rm -rf /app/* /app/.[!.]* 2>/dev/null || true && \
-    git clone --depth 1 --branch main git@github.com:aleaccurso/meal-planner.git /app && \
-    cd /app && \
+    git clone --depth 1 --branch main \
+    https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner.git /app && \
     git rev-parse HEAD > /tmp/git-commit.txt && \
     git log -1 --format="📌 Commit: %H - %s"
 
-# Install dependencies (cached separately - only rebuilds if package files change)
+# Install dependencies
 RUN npm install
 
-# Build the application (cached separately - only rebuilds if source code changes)
+# Build the application
 RUN npm run build
 
 # ---- Runtime stage ----
 FROM nginx:alpine
 
-# Copy the built files from builder stage
+# Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80
+# Expose port
 EXPOSE 80
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
-

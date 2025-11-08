@@ -2,7 +2,7 @@
 FROM golang:1.23-alpine AS builder
 
 # Install Git
-RUN apk add --no-cache git
+RUN apk update && apk add --no-cache git
 
 # Enable automatic toolchain download if needed
 ENV GOTOOLCHAIN=auto

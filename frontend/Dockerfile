@@ -2,7 +2,7 @@
 FROM node:18-alpine AS builder
 
 # Install Git
-RUN apk add --no-cache git
+RUN apk update && apk add --no-cache git
 
 # Set working directory
 WORKDIR /app

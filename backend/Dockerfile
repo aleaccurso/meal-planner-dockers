@@ -1,8 +1,11 @@
 # ---- Build stage ----
 FROM golang:1.23-alpine AS builder
 
-# Install Git
-RUN apk update && apk add --no-cache git
+# Install Git and required dependencies
+RUN apk add --update --no-cache \
+    git \
+    ca-certificates \
+    && rm -rf /var/cache/apk/*
 
 # Enable automatic toolchain download if needed
 ENV GOTOOLCHAIN=auto

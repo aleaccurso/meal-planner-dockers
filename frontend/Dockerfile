@@ -27,12 +27,13 @@ RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
         echo "WARNING: Cannot resolve github.com. DNS issue detected. Will attempt clone anyway."; \
     fi && \
     echo "Cloning repository via HTTPS..." && \
-    git clone --depth 1 -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner.git . || { \
-        echo "ERROR: Git clone failed via HTTPS."; \
+    git clone --depth 1 -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner.git . && \
+    if [ ! -f package.json ]; then \
+        echo "ERROR: Repository clone failed - package.json not found"; \
         exit 1; \
-    } && \
+    fi && \
     rm -rf .git && \
-    git rev-parse HEAD > /tmp/git-commit.txt || true
+    git rev-parse HEAD > /tmp/git-commit.txt 2>/dev/null || true
 
 # Install dependencies
 RUN npm install

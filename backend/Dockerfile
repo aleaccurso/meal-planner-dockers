@@ -1,5 +1,5 @@
 # ---- Build stage ----
-FROM golang:1.23 AS builder
+FROM golang:1.25.3 AS builder
 
 # Git is pre-installed in Debian-based golang image
 # No need to install it separately
@@ -11,7 +11,7 @@ ENV GOTOOLCHAIN=auto
 WORKDIR /app
 
 # Build args
-ARG CACHE_BUST=1
+ARG CACHE_BUST=-1
 ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
 

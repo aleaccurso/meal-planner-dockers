@@ -11,7 +11,7 @@ services:
     ports:
       - "${DB_PORT}:5432"
     env_file:
-      - ${BACKEND_ENV_FILE}
+      - .env.backend
     volumes:
       - ${DB_DATA_PATH}:/var/lib/postgresql/data
     networks:
@@ -27,7 +27,7 @@ services:
         GITHUB_USERNAME: ${GITHUB_USERNAME}
       network: host
     env_file:
-      - ${BACKEND_ENV_FILE}
+      - .env.backend
     container_name: meal-planner-backend
     environment:
       ENVIRONMENT: ${ENVIRONMENT}
@@ -57,7 +57,7 @@ services:
         GITHUB_USERNAME: ${GITHUB_USERNAME}
       network: host
     env_file:
-      - ${FRONTEND_ENV_FILE}
+      - .env.frontend
     container_name: meal-planner-frontend
     environment:
       REACT_APP_BACKEND_BASE_URL: http://backend:${BACKEND_PORT}

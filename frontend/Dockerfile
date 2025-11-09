@@ -1,5 +1,5 @@
 # ---- Build stage ----
-FROM node:18 AS builder
+FROM node:20 AS builder
 
 # Git is pre-installed in Debian-based node image
 # No need to install it separately
@@ -31,6 +31,9 @@ RUN npm run build
 
 # ---- Runtime stage ----
 FROM nginx:alpine
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html

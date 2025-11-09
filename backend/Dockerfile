@@ -35,8 +35,8 @@ RUN if [ ! -f go.mod ]; then \
 # Download Go modules
 RUN go mod download
 
-# Build the binary
-RUN go build -o main .
+# Build the binary with CGO disabled for Alpine compatibility
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 # ---- Runtime stage ----
 FROM alpine:latest

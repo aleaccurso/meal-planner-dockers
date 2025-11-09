@@ -44,8 +44,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 # ---- Runtime stage ----
 FROM alpine:3.19
 
-# Install wget for healthcheck
-RUN apk add --no-cache wget
+# Install wget and netcat for healthcheck
+RUN apk add --no-cache wget netcat-openbsd
 
 # Create non-root user
 RUN addgroup -g 1000 appuser && \

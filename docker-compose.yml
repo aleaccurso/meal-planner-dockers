@@ -24,8 +24,8 @@ services:
       dockerfile: Dockerfile
       args:
         CACHE_BUST: ${CACHE_BUST:-1}
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
-        GITHUB_USERNAME: ${GITHUB_USERNAME}
+      ssh:
+        - default
     env_file:
       - ${ENV_FILE_PATH}
     container_name: meal-planner-backend
@@ -64,8 +64,8 @@ services:
       dockerfile: Dockerfile
       args:
         CACHE_BUST: ${CACHE_BUST:-1}
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
-        GITHUB_USERNAME: ${GITHUB_USERNAME}
+      ssh:
+        - default
     env_file:
       - ${ENV_FILE_PATH:-.env}
     container_name: meal-planner-frontend

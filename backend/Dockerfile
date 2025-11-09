@@ -12,19 +12,19 @@ WORKDIR /app
 
 # Build args
 ARG CACHE_BUST=1
+ARG GITHUB_TOKEN
+ARG GITHUB_USERNAME
 
 RUN echo "Cache bust: ${CACHE_BUST}"
 
-# Configure SSH and clone using SSH
-# --mount=type=ssh mounts the SSH agent socket
-RUN --mount=type=ssh \
-    mkdir -p -m 0700 ~/.ssh && \
-    ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true && \
-    echo "Testing SSH connection to GitHub..." && \
-    ssh -T git@github.com 2>&1 || echo "SSH test completed (exit code expected)" && \
-    echo "Cloning repository via SSH..." && \
-    git clone --depth 1 -b main git@github.com:aleaccurso/meal-planner-backend.git . || { \
-        echo "ERROR: Git clone failed via SSH."; \
+# Clone using HTTPS with token
+RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
+        echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
+        exit 1; \
+    fi && \
+    echo "Cloning repository via HTTPS..." && \
+    git clone --depth 1 -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner-backend.git . || { \
+        echo "ERROR: Git clone failed via HTTPS."; \
         exit 1; \
     } && \
     rm -rf .git && \

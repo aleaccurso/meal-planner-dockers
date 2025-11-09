@@ -23,9 +23,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       args:
-        CACHE_BUST: ${CACHE_BUST:-1}
-      ssh:
-        - default
+        CACHE_BUST: -1
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        GITHUB_USERNAME: ${GITHUB_USERNAME}
     env_file:
       - ${ENV_FILE_PATH}
     container_name: meal-planner-backend
@@ -44,16 +44,6 @@ services:
     depends_on:
       - db
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget --quiet --tries=1 --spider http://localhost:8010/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     networks:
       - mealplanner_backend_network
       - mealplanner_app_network
@@ -63,11 +53,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        CACHE_BUST: ${CACHE_BUST:-1}
-      ssh:
-        - default
+        CACHE_BUST: -1
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        GITHUB_USERNAME: ${GITHUB_USERNAME}
     env_file:
-      - ${ENV_FILE_PATH:-.env}
+      - ${ENV_FILE_PATH}
     container_name: meal-planner-frontend
     environment:
       REACT_APP_BACKEND_BASE_URL: http://backend:${BACKEND_PORT}

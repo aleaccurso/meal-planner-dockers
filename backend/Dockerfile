@@ -39,12 +39,25 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 # ---- Runtime stage ----
-FROM alpine:latest
+FROM alpine:3.19
+
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
+# Create non-root user
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
 
 WORKDIR /app
 
 # Copy binary from builder
 COPY --from=builder /app/main .
+
+# Change ownership to non-root user
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
 
 # Expose port
 EXPOSE 8010

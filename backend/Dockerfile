@@ -22,7 +22,15 @@ RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
         echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
         exit 1; \
     fi && \
-    git clone --depth 1 -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner-backend.git . && \
+    echo "Cloning repository..." && \
+    git clone --depth 1 -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner-backend.git . || { \
+        echo "ERROR: Git clone failed. Check:"; \
+        echo "  1. GITHUB_TOKEN is valid and not expired"; \
+        echo "  2. GITHUB_USERNAME is correct"; \
+        echo "  3. Token has access to the repository"; \
+        echo "  4. Repository exists at: aleaccurso/meal-planner-backend"; \
+        exit 1; \
+    } && \
     rm -rf .git && \
     git rev-parse HEAD > /tmp/git-commit.txt || true
 

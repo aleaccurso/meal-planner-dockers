@@ -70,7 +70,7 @@ services:
       - ${ENV_FILE_PATH:-.env}
     container_name: meal-planner-frontend
     environment:
-      REACT_APP_BACKEND_BASE_URL:  http://backend:${BACKEND_PORT}
+      REACT_APP_BACKEND_BASE_URL: http://backend:${BACKEND_PORT}
     ports:
       - "${FRONTEND_PORT}:80"
     depends_on:

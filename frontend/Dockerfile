@@ -1,5 +1,5 @@
 # ---- Build stage ----
-FROM node:20 AS builder
+FROM node:25 AS builder
 
 # Git is pre-installed in Debian-based node image
 # No need to install it separately

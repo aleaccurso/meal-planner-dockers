@@ -35,7 +35,7 @@ RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
         exit 1; \
     fi && \
     echo "Cloning repository via HTTPS..." && \
-    git clone --depth 1 -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner-backend.git . || { \
+    git clone --depth 1 -b main https://${GITHUB_TOKEN}@github.com/${GITHUB_USERNAME}/meal-planner-backend.git . || { \
         echo "ERROR: Git clone failed via HTTPS."; \
         echo "Possible causes:"; \
         echo "  1. Network/DNS issue (check above)"; \

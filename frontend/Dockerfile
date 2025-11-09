@@ -19,15 +19,13 @@ RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
         echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
         exit 1; \
     fi && \
-    echo "Cloning repository..." && \
-    git clone --depth 1 -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner.git . || { \
-        echo "ERROR: Git clone failed. Check:"; \
-        echo "  1. GITHUB_TOKEN is valid and not expired"; \
-        echo "  2. GITHUB_USERNAME is correct"; \
-        echo "  3. Token has access to the repository"; \
-        echo "  4. Repository exists at: aleaccurso/meal-planner"; \
+    echo "Checking GitHub connectivity..." && \
+    if ! curl -s --connect-timeout 10 --max-time 30 https://github.com > /dev/null; then \
+        echo "ERROR: Cannot reach GitHub. Check network connectivity and firewall settings."; \
         exit 1; \
-    } && \
+    fi && \
+    echo "GitHub is reachable. Cloning repository..." && \
+    git clone --depth 1 -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner.git . && \
     rm -rf .git && \
     git rev-parse HEAD > /tmp/git-commit.txt || true
 

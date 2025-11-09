@@ -12,8 +12,6 @@ ARG CACHE_BUST=-1
 ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
 
-RUN echo "Cache bust: ${CACHE_BUST}"
-
 # Clone using HTTPS with token
 RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
         echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \

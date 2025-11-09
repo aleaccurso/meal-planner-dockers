@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${DB_USER_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "${DB_PORT}:5432"
+      - "15432:5432"
     env_file:
       - .env
     volumes:
@@ -46,21 +46,11 @@ services:
       PROJECT_ID: ${PROJECT_ID}
       DRIVER_NAME: ${DRIVER_NAME}
     ports:
-      - "${BACKEND_PORT}:8010"
+      - "8010:8010"
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "nc -z localhost 8010 || wget --quiet --timeout=5 --tries=1 --spider http://localhost:8010/health 2>/dev/null || wget --quiet --timeout=5 --tries=1 --spider http://localhost:8010/ 2>/dev/null || exit 1",
-        ]
-      interval: 15s
-      timeout: 15s
-      retries: 5
-      start_period: 90s
     networks:
       - mealplanner_backend_network
       - mealplanner_app_network
@@ -77,12 +67,11 @@ services:
       - .env
     container_name: meal-planner-frontend
     environment:
-      REACT_APP_BACKEND_BASE_URL: http://backend:${BACKEND_PORT}
+      REACT_APP_BACKEND_BASE_URL: /api
     ports:
-      - "${FRONTEND_PORT}:80"
+      - "5173:80"
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     restart: unless-stopped
     networks:
       - mealplanner_app_network

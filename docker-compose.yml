@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${DB_USER_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "15432:5432"
+      - "${DB_PORT}:5432"
     env_file:
       - .env
     volumes:
@@ -46,7 +46,7 @@ services:
       PROJECT_ID: ${PROJECT_ID}
       DRIVER_NAME: ${DRIVER_NAME}
     ports:
-      - "8010:8010"
+      - "${BACKEND_PORT}:8010"
     depends_on:
       db:
         condition: service_healthy
@@ -62,7 +62,6 @@ services:
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN}
         GITHUB_USERNAME: ${GITHUB_USERNAME}
-        VITE_API_URL: ${VITE_API_URL:-/api}
       network: host
     env_file:
       - .env

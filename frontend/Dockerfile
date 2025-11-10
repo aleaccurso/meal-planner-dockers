@@ -11,7 +11,6 @@ WORKDIR /app
 ARG CACHE_BUST=-1
 ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
-ARG VITE_API_URL=/api
 
 # Clone using HTTPS with token
 RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
@@ -29,9 +28,6 @@ RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
 
 # Install dependencies
 RUN npm install
-
-# Set VITE_API_URL as environment variable for build
-ENV VITE_API_URL=${VITE_API_URL}
 
 # Build the application
 RUN npm run build

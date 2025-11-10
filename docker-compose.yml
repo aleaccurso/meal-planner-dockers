@@ -68,6 +68,9 @@ services:
     env_file:
       - .env
     container_name: meal-planner-frontend
+    environment:
+      BACKEND_HOST: ${BACKEND_HOST:-backend}
+      BACKEND_PORT: ${BACKEND_PORT:-8010}
     ports:
       - "5173:80"
     depends_on:

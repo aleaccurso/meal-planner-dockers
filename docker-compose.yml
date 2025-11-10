@@ -62,12 +62,11 @@ services:
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN}
         GITHUB_USERNAME: ${GITHUB_USERNAME}
+        VITE_API_URL: ${VITE_API_URL:-/api}
       network: host
     env_file:
       - .env
     container_name: meal-planner-frontend
-    environment:
-      VITE_API_URL: /api
     ports:
       - "5173:80"
     depends_on:

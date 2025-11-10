@@ -48,8 +48,7 @@ services:
     ports:
       - "${BACKEND_PORT}:8010"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     restart: unless-stopped
     networks:
       - mealplanner_backend_network

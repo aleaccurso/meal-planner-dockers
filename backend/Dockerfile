@@ -23,7 +23,7 @@ RUN echo "Cache bust: ${CACHE_BUST}" && \
     fi && \
     echo "Cloning repository via HTTPS..." && \
     git clone --depth 1 --no-tags --single-branch -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner-backend.git . && \
-    COMMIT_HASH=$$(git rev-parse HEAD 2>/dev/null || echo "unknown") && \
+    COMMIT_HASH=`git rev-parse HEAD 2>/dev/null || echo "unknown"` && \
     echo "✓ Successfully cloned meal-planner-backend repository (commit: $${COMMIT_HASH})" && \
     if [ ! -f go.mod ]; then \
         echo "ERROR: Repository clone failed - go.mod not found"; \

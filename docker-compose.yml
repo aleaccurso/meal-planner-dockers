@@ -29,6 +29,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       args:
+        CACHE_BUST: ${CACHE_BUST}
         GITHUB_TOKEN: ${GITHUB_TOKEN}
         GITHUB_USERNAME: ${GITHUB_USERNAME}
       network: host
@@ -59,6 +60,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
+        CACHE_BUST: ${CACHE_BUST}
         GITHUB_TOKEN: ${GITHUB_TOKEN}
         GITHUB_USERNAME: ${GITHUB_USERNAME}
       network: host

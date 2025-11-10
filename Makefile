@@ -2,7 +2,7 @@
 .PHONY: down
 
 up:
-	DOCKER_BUILDKIT=1 docker compose build && docker compose up -d
+	CACHE_BUST=$$(date +%s) DOCKER_BUILDKIT=1 docker compose build && docker compose up -d
 
 down:
 	docker compose down

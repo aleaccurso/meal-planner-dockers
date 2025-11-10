@@ -8,17 +8,18 @@ FROM node:25 AS builder
 WORKDIR /app
 
 # Build args
-ARG CACHE_BUST=-1
+ARG CACHE_BUST
 ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
 
-# Clone using HTTPS with token
-RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
+# Use CACHE_BUST to ensure fresh clone on every build (invalidates cache when changed)
+RUN echo "Cache bust: ${CACHE_BUST}" && \
+    if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
         echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
         exit 1; \
     fi && \
     echo "Cloning repository via HTTPS..." && \
-    git clone --depth 1 -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner.git . && \
+    git clone --depth 1 --no-tags --single-branch -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner.git . && \
     if [ ! -f package.json ]; then \
         echo "ERROR: Repository clone failed - package.json not found"; \
         exit 1; \

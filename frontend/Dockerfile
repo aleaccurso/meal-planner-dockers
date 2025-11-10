@@ -20,8 +20,9 @@ RUN echo "Cache bust: ${CACHE_BUST}" && \
     fi && \
     echo "Cloning repository via HTTPS..." && \
     git clone --depth 1 --no-tags --single-branch -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner.git . && \
-    COMMIT_HASH=$$(git rev-parse HEAD 2>/dev/null || echo "unknown") && \
+    COMMIT_HASH=`git rev-parse HEAD 2>/dev/null || echo "unknown"` && \
     echo "✓ Successfully cloned meal-planner repository (commit: $${COMMIT_HASH})" && \
+    echo "✓ Repository is up-to-date with latest from main branch" && \
     if [ ! -f package.json ]; then \
         echo "ERROR: Repository clone failed - package.json not found"; \
         exit 1; \

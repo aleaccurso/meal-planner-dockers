@@ -14,6 +14,11 @@ ARG GITHUB_USERNAME
 ARG BACKEND_HOST
 ARG BACKEND_PORT
 
+# Set Vite environment variables from build args
+# These need to be available at build time for Vite to embed them
+ENV VITE_BACKEND_HOST=${BACKEND_HOST}
+ENV VITE_BACKEND_PORT=${BACKEND_PORT}
+
 # Use CACHE_BUST to ensure fresh clone on every build (invalidates cache when changed)
 RUN echo "Cache bust: ${CACHE_BUST}" && \
     if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
@@ -35,7 +40,9 @@ RUN echo "Cache bust: ${CACHE_BUST}" && \
 RUN npm install
 
 # Build the application
-RUN npm run build
+# VITE_BACKEND_HOST and VITE_BACKEND_PORT are now available as environment variables
+RUN echo "Building with VITE_BACKEND_HOST=${VITE_BACKEND_HOST} and VITE_BACKEND_PORT=${VITE_BACKEND_PORT}" && \
+    npm run build
 
 # ---- Runtime stage ----
 FROM nginx:alpine
@@ -53,4 +60,4 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 EXPOSE 80
 
 # Start nginx with environment variable substitution
-CMD ["/bin/sh", "-c", "envsubst '$$BACKEND_HOST $$BACKEND_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "envsubst '$$VITE_BACKEND_HOST $$VITE_BACKEND_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

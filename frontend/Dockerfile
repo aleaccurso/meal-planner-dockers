@@ -11,13 +11,6 @@ WORKDIR /app
 ARG CACHE_BUST
 ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
-ARG BACKEND_HOST
-ARG BACKEND_PORT
-
-# Set Vite environment variables from build args
-# These need to be available at build time for Vite to embed them
-ENV VITE_BACKEND_HOST=${BACKEND_HOST}
-ENV VITE_BACKEND_PORT=${BACKEND_PORT}
 
 # Use CACHE_BUST to ensure fresh clone on every build (invalidates cache when changed)
 RUN echo "Cache bust: ${CACHE_BUST}" && \

@@ -47,6 +47,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 # ---- Runtime stage ----
 FROM alpine:3.19
 
+# Build arg for port (must be redeclared in this stage)
+ARG VITE_BACKEND_PORT
+
 # Install wget and netcat for healthcheck
 RUN apk add --no-cache wget netcat-openbsd
 
@@ -65,8 +68,8 @@ RUN chown -R appuser:appuser /app
 # Switch to non-root user
 USER appuser
 
-# Expose port
-EXPOSE 8010
+# Expose port (using build arg with default value)
+EXPOSE ${VITE_BACKEND_PORT}
 
 # Run
 CMD ["./main"]

@@ -3,6 +3,8 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
+      args:
+        DB_PORT: ${DB_PORT}
     container_name: meal-planner-db
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -32,6 +34,7 @@ services:
         CACHE_BUST: ${CACHE_BUST}
         GITHUB_TOKEN: ${GITHUB_TOKEN}
         GITHUB_USERNAME: ${GITHUB_USERNAME}
+        BACKEND_PORT: ${BACKEND_PORT}
       network: host
     env_file:
       - .env

@@ -11,12 +11,11 @@ ENV GOTOOLCHAIN=auto
 WORKDIR /app
 
 # Build args
-ARG CACHE_BUST
 ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
 
 # Use CACHE_BUST to ensure fresh clone on every build (invalidates cache when changed)
-RUN echo "Cache bust: ${CACHE_BUST}" && \
+RUN CACHE_BUST=`date +%s` && \
     if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
         echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
         exit 1; \
@@ -48,7 +47,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 FROM alpine:3.19
 
 # Build arg for port (must be redeclared in this stage)
-ARG VITE_BACKEND_PORT
+ARG BACKEND_PORT
 
 # Install wget and netcat for healthcheck
 RUN apk add --no-cache wget netcat-openbsd
@@ -69,7 +68,7 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 # Expose port (using build arg with default value)
-EXPOSE ${VITE_BACKEND_PORT}
+EXPOSE ${BACKEND_PORT}
 
 # Run
 CMD ["./main"]

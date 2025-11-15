@@ -11,6 +11,8 @@ WORKDIR /app
 ARG CACHE_BUST
 ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
+ARG BACKEND_HOST
+ARG BACKEND_PORT
 
 # Use CACHE_BUST to ensure fresh clone on every build (invalidates cache when changed)
 RUN echo "Cache bust: ${CACHE_BUST}" && \
@@ -49,10 +51,6 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Expose port
 EXPOSE 80
-
-# Set default environment variables (can be overridden)
-ENV BACKEND_HOST=backend
-ENV BACKEND_PORT=8010
 
 # Start nginx with environment variable substitution
 CMD ["/bin/sh", "-c", "envsubst '$$BACKEND_HOST $$BACKEND_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

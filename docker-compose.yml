@@ -38,7 +38,7 @@ services:
     container_name: meal-planner-backend
     environment:
       ENVIRONMENT: ${ENVIRONMENT}
-      HOST: db
+      DB_HOST: db
       DB_PORT: 5432
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
@@ -64,13 +64,15 @@ services:
         GITHUB_USERNAME: ${GITHUB_USERNAME}
         BACKEND_HOST: ${BACKEND_HOST}
         BACKEND_PORT: ${BACKEND_PORT}
+        VITE_BACKEND_HOST: ${BACKEND_HOST}
+        VITE_BACKEND_PORT: ${BACKEND_PORT}
       network: host
     env_file:
       - .env
     container_name: meal-planner-frontend
     environment:
-      VITE_BACKEND_HOST: ${BACKEND_HOST:-backend}
-      VITE_BACKEND_PORT: ${BACKEND_PORT:-8010}
+      VITE_BACKEND_HOST: ${BACKEND_HOST}
+      VITE_BACKEND_PORT: ${BACKEND_PORT}
     ports:
       - "5173:80"
     depends_on:

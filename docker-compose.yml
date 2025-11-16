@@ -62,14 +62,14 @@ services:
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN}
         GITHUB_USERNAME: ${GITHUB_USERNAME}
-        VITE_APP_BACKEND_HOST: backend
+        VITE_APP_BACKEND_HOST: meal-planner-backend
         VITE_APP_BACKEND_PORT: ${BACKEND_PORT}
       network: host
     env_file:
       - .env
     container_name: meal-planner-frontend
     environment:
-      VITE_APP_BACKEND_HOST: ${BACKEND_HOST}
+      VITE_APP_BACKEND_HOST: meal-planner-backend
       VITE_APP_BACKEND_PORT: ${BACKEND_PORT}
     ports:
       - "5173:80"

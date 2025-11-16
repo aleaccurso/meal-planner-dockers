@@ -11,16 +11,14 @@ WORKDIR /app
 ARG CACHE_BUST
 ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
-ARG BACKEND_HOST
-ARG BACKEND_PORT
-ARG VITE_BACKEND_HOST
-ARG VITE_BACKEND_PORT
+ARG VITE_APP_BACKEND_HOST
+ARG VITE_APP_BACKEND_PORT
 
-# Set Vite environment variables from build args
-# These MUST be set as ENV (not just ARG) so Vite can access them during build
-# Vite embeds environment variables at build time, not runtime
-ENV VITE_BACKEND_HOST=${VITE_BACKEND_HOST}
-ENV VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
+# # Set Vite environment variables from build args
+# # These MUST be set as ENV (not just ARG) so Vite can access them during build
+# # Vite embeds environment variables at build time, not runtime
+# ENV VITE_APP_BACKEND_HOST=${VITE_APP_BACKEND_HOST}
+# ENV VITE_APP_BACKEND_PORT=${VITE_APP_BACKEND_PORT}
 
 # Use CACHE_BUST to ensure fresh clone on every build (invalidates cache when changed)
 RUN echo "Cache bust: ${CACHE_BUST}" && \
@@ -43,8 +41,8 @@ RUN echo "Cache bust: ${CACHE_BUST}" && \
 RUN npm install
 
 # Build the application
-# VITE_BACKEND_HOST and VITE_BACKEND_PORT are now available as environment variables
-RUN echo "Building with VITE_BACKEND_HOST=${VITE_BACKEND_HOST} and VITE_BACKEND_PORT=${VITE_BACKEND_PORT}" && \
+# VITE_APP_BACKEND_HOST and VITE_APP_BACKEND_PORT are now available as environment variables
+RUN echo "Building with VITE_APP_BACKEND_HOST=${VITE_APP_BACKEND_HOST} and VITE_APP_BACKEND_PORT=${VITE_APP_BACKEND_PORT}" && \
     npm run build
 
 # ---- Runtime stage ----
@@ -63,4 +61,4 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 EXPOSE 80
 
 # Start nginx with environment variable substitution
-CMD ["/bin/sh", "-c", "envsubst '$$BACKEND_HOST $$BACKEND_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "envsubst '$$VITE_APP_BACKEND_HOST $$VITE_APP_BACKEND_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

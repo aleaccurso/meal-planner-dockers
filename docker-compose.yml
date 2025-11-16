@@ -64,15 +64,15 @@ services:
         GITHUB_USERNAME: ${GITHUB_USERNAME}
         BACKEND_HOST: backend
         BACKEND_PORT: ${BACKEND_PORT}
-        VITE_BACKEND_HOST: ${BACKEND_HOST}
-        VITE_BACKEND_PORT: ${BACKEND_PORT}
+        VITE_APP_BACKEND_HOST: backend
+        VITE_APP_BACKEND_PORT: ${BACKEND_PORT}
       network: host
     env_file:
       - .env
     container_name: meal-planner-frontend
     environment:
-      VITE_BACKEND_HOST: backend
-      VITE_BACKEND_PORT: ${BACKEND_PORT}
+      VITE_APP_BACKEND_HOST: backend
+      VITE_APP_BACKEND_PORT: ${BACKEND_PORT}
     ports:
       - "5173:80"
     depends_on:

@@ -62,8 +62,6 @@ services:
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN}
         GITHUB_USERNAME: ${GITHUB_USERNAME}
-        BACKEND_HOST: backend
-        BACKEND_PORT: ${BACKEND_PORT}
         VITE_APP_BACKEND_HOST: backend
         VITE_APP_BACKEND_PORT: ${BACKEND_PORT}
       network: host

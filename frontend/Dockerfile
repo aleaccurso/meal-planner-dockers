@@ -13,12 +13,12 @@ ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
 ARG VITE_APP_BACKEND_HOST
 ARG VITE_APP_BACKEND_PORT
+ARG VITE_APP_API_BASE_URL
 
-# # Set Vite environment variables from build args
-# # These MUST be set as ENV (not just ARG) so Vite can access them during build
-# # Vite embeds environment variables at build time, not runtime
-# ENV VITE_APP_BACKEND_HOST=${VITE_APP_BACKEND_HOST}
-# ENV VITE_APP_BACKEND_PORT=${VITE_APP_BACKEND_PORT}
+# Set Vite environment variables from build args
+# These MUST be set as ENV (not just ARG) so Vite can access them during build
+# Vite embeds environment variables at build time, not runtime
+ENV VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL}
 
 # Use CACHE_BUST to ensure fresh clone on every build (invalidates cache when changed)
 RUN echo "Cache bust: ${CACHE_BUST}" && \
@@ -41,8 +41,8 @@ RUN echo "Cache bust: ${CACHE_BUST}" && \
 RUN npm install
 
 # Build the application
-# VITE_APP_BACKEND_HOST and VITE_APP_BACKEND_PORT are now available as environment variables
-RUN echo "Building with VITE_APP_BACKEND_HOST=${VITE_APP_BACKEND_HOST} and VITE_APP_BACKEND_PORT=${VITE_APP_BACKEND_PORT}" && \
+# VITE_APP_API_BASE_URL is available as environment variable for React app
+RUN echo "Building with VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL}" && \
     npm run build
 
 # ---- Runtime stage ----

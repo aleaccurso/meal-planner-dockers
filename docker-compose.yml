@@ -62,21 +62,24 @@ services:
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN}
         GITHUB_USERNAME: ${GITHUB_USERNAME}
-        VITE_APP_BACKEND_HOST: meal-planner-backend
-        VITE_APP_BACKEND_PORT: ${BACKEND_PORT}
+        # VITE_APP_API_BASE_URL is used by React app at build time (should be /api)
+        VITE_APP_API_BASE_URL: ${API_BASE_URL:-/api}
       network: host
     env_file:
       - .env
     container_name: meal-planner-frontend
     environment:
-      VITE_APP_BACKEND_HOST: meal-planner-backend
-      VITE_APP_BACKEND_PORT: ${BACKEND_PORT}
+      # These are used by nginx at runtime to proxy /api requests to backend container
+      # Use service name 'backend' for Docker DNS resolution within the network
+      VITE_APP_BACKEND_HOST: backend
+      VITE_APP_BACKEND_PORT: 8010
     ports:
       - "5173:80"
     depends_on:
       - backend
     restart: unless-stopped
     networks:
+      - mealplanner_backend_network
       - mealplanner_app_network
 
 volumes:

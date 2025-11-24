@@ -16,8 +16,7 @@ services:
     volumes:
       - ${DB_DATA_PATH}:/var/lib/postgresql/data
     networks:
-      mealplanner_backend_network:
-        ipv4_address: ${DB_BACKEND_IP}
+      - mealplanner_backend_network
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
@@ -53,10 +52,8 @@ services:
       - db
     restart: unless-stopped
     networks:
-      mealplanner_backend_network:
-        ipv4_address: ${BE_BACKEND_IP}
-      mealplanner_app_network:
-        ipv4_address: ${BE_APP_IP}
+      - mealplanner_backend_network
+      - mealplanner_app_network
 
   frontend:
     build:
@@ -71,16 +68,15 @@ services:
       - .env
     container_name: meal-planner-frontend
     environment:
-      VITE_APP_BACKEND_HOST: ${BE_APP_IP}
-      VITE_APP_BACKEND_PORT: ${BACKEND_PORT}
+      VITE_APP_BACKEND_HOST: backend
+      VITE_APP_BACKEND_PORT: 8010
     ports:
       - "5173:80"
     depends_on:
       - backend
     restart: unless-stopped
     networks:
-      mealplanner_app_network:
-        ipv4_address: ${FE_APP_IP}
+      - mealplanner_app_network
 
 volumes:
   mealplanner_db_data:
@@ -88,12 +84,5 @@ volumes:
 networks:
   mealplanner_backend_network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: ${BE_SUBNET}
-
   mealplanner_app_network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: ${FE_SUBNET}

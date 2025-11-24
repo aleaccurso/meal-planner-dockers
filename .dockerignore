@@ -60,3 +60,4 @@ dist/
 build/
 *.egg-info/
 
+Makefile

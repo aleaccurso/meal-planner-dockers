@@ -8,21 +8,17 @@ FROM node:25 AS builder
 WORKDIR /app
 
 # Build args
-ARG CACHE_BUST
 ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
-ARG VITE_APP_BACKEND_HOST
-ARG VITE_APP_BACKEND_PORT
-ARG API_BASE_URL
+ARG VITE_APP_API_BASE_URL
 
 # Set Vite environment variables from build args
 # These MUST be set as ENV (not just ARG) so Vite can access them during build
 # Vite embeds environment variables at build time, not runtime
-ENV VITE_APP_API_BASE_URL=${API_BASE_URL}
+ENV VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL}
 
-# Use CACHE_BUST to ensure fresh clone on every build (invalidates cache when changed)
-RUN echo "Cache bust: ${CACHE_BUST}" && \
-    if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
+# Clone repository
+RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
         echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
         exit 1; \
     fi && \
@@ -41,7 +37,7 @@ RUN echo "Cache bust: ${CACHE_BUST}" && \
 RUN npm install
 
 # Build the application
-# VITE_APP_API_BASE_URL is available as environment variable for React app
+# VITE_APP_API_BASE_URL is available as environment variable for Vite to embed
 RUN echo "Building with VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL}" && \
     npm run build
 

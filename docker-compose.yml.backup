@@ -16,8 +16,7 @@ services:
     volumes:
       - ${DB_DATA_PATH}:/var/lib/postgresql/data
     networks:
-      mealplanner_backend_network:
-        ipv4_address: 172.31.200.10
+      - mealplanner_backend_network
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
@@ -53,10 +52,8 @@ services:
       - db
     restart: unless-stopped
     networks:
-      mealplanner_backend_network:
-        ipv4_address: 172.31.200.20
-      mealplanner_app_network:
-        ipv4_address: 172.31.201.20
+      - mealplanner_backend_network
+      - mealplanner_app_network
 
   frontend:
     build:
@@ -79,22 +76,13 @@ services:
       - backend
     restart: unless-stopped
     networks:
-      mealplanner_app_network:
-        ipv4_address: 172.31.201.10
+      - mealplanner_app_network
 
 volumes:
   mealplanner_db_data:
 
-
 networks:
   mealplanner_backend_network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.31.200.0/24
-
   mealplanner_app_network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.31.201.0/24

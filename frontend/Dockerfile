@@ -12,8 +12,7 @@ ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
 ARG VITE_APP_API_BASE_URL
 
-# Set Vite environment variables from build args
-# These MUST be set as ENV (not just ARG) so Vite can access them during build
+# Set Vite environment variables from build args 
 # Vite embeds environment variables at build time, not runtime
 ENV VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL}
 

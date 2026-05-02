@@ -58,8 +58,9 @@ RUN addgroup -g 1000 appuser && \
 
 WORKDIR /app
 
-# Copy binary from builder
+# Copy binary and migrations from builder
 COPY --from=builder /app/main .
+COPY --from=builder /app/database/migrations ./database/migrations
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app

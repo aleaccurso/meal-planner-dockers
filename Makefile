@@ -9,3 +9,9 @@ down:
 
 restart:
 	$(MAKE) down && $(MAKE) up
+
+db-dump:
+	./scripts/db-dump.sh
+
+db-restore:
+	./scripts/db-restore.sh

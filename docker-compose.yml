@@ -50,6 +50,7 @@ services:
       DB_DUMPS_FOLDER: ${DB_DUMPS_FOLDER}
       USERS_AVATAR_FOLDER: ${USERS_AVATAR_FOLDER}
       RECIPES_IMAGES_FOLDER: ${RECIPES_IMAGES_FOLDER}
+      AUTH_CONFIG_PATH: /app/auth-config.json
     ports:
       - "${BACKEND_PORT}:8010"
     volumes:

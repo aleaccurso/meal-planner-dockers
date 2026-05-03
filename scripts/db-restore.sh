@@ -1,14 +1,17 @@
 #!/bin/bash
 
-if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+ENV_FILE="$SCRIPT_DIR/../.env"
+
+if [ -f "$ENV_FILE" ]; then
+    export $(grep -v '^#' "$ENV_FILE" | xargs)
 else
-    echo ".env file not found!"
+    echo ".env file not found at $ENV_FILE"
     exit 1
 fi
 
-if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$INSTANCE_NAME" ]; then
-    echo "DB_NAME, DB_USER, or INSTANCE_NAME is not set in .env file!"
+if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ]; then
+    echo "DB_NAME or DB_USER is not set in .env file!"
     exit 1
 fi
 
@@ -31,15 +34,30 @@ if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then
     exit 0
 fi
 
-if [ "$ENVIRONMENT" = "LOCAL" ]; then
+if [ "$ENVIRONMENT" = "LOCAL_DOCKER" ]; then
+    if [ -z "$INSTANCE_NAME" ]; then
+        echo "INSTANCE_NAME is not set in .env file!"
+        exit 1
+    fi
     docker exec -i -e PGPASSWORD="$DB_USER_PASSWORD" "$INSTANCE_NAME" \
         psql -U "$DB_USER" -d "$DB_NAME" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" \
         && docker exec -i -e PGPASSWORD="$DB_USER_PASSWORD" "$INSTANCE_NAME" \
         psql -U "$DB_USER" "$DB_NAME" < "$DUMP_FILE"
-else
-    PGPASSWORD="$DB_USER_PASSWORD" psql -h "127.0.0.1" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+elif [ "$ENVIRONMENT" = "LOCAL" ]; then
+    PGPASSWORD="$DB_USER_PASSWORD" psql -h "localhost" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
         -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" \
-        && PGPASSWORD="$DB_USER_PASSWORD" psql -h "127.0.0.1" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" < "$DUMP_FILE"
+        && PGPASSWORD="$DB_USER_PASSWORD" psql -h "localhost" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" < "$DUMP_FILE"
+elif [ "$ENVIRONMENT" = "PRODUCTION" ]; then
+    if [ -z "$DB_HOST" ]; then
+        echo "DB_HOST is not set in .env file!"
+        exit 1
+    fi
+    PGPASSWORD="$DB_USER_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+        -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" \
+        && PGPASSWORD="$DB_USER_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" < "$DUMP_FILE"
+else
+    echo "Unknown ENVIRONMENT: '$ENVIRONMENT'. Expected LOCAL, LOCAL_DOCKER, or PRODUCTION."
+    exit 1
 fi
 
 if [ $? -eq 0 ]; then

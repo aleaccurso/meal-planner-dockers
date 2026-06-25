@@ -1,8 +1,12 @@
+# syntax=docker/dockerfile:1
 # ---- Build stage ----
-FROM golang:1.25.3 AS builder
+FROM golang:1.26-alpine AS builder
 
-# Git is pre-installed in Debian-based golang image
-# No need to install it separately
+# Patch Alpine packages to latest versions before anything else
+RUN apk upgrade --no-cache
+
+# Alpine golang image does not include git
+RUN apk add --no-cache git
 
 # Enable automatic toolchain download if needed
 ENV GOTOOLCHAIN=auto
@@ -10,21 +14,22 @@ ENV GOTOOLCHAIN=auto
 # Set working directory
 WORKDIR /app
 
-# Build args
-ARG GITHUB_TOKEN
-ARG GITHUB_USERNAME
-
 # Use CACHE_BUST to ensure fresh clone on every build (invalidates cache when changed)
-RUN CACHE_BUST=`date +%s` && \
+# Secrets are mounted at runtime only and never written to any image layer
+RUN --mount=type=secret,id=github_token \
+    --mount=type=secret,id=github_username \
+    GITHUB_TOKEN=$(cat /run/secrets/github_token) && \
+    GITHUB_USERNAME=$(cat /run/secrets/github_username) && \
+    CACHE_BUST=$(date +%s) && \
     if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
-        echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
+        echo "ERROR: github_token and github_username secrets must be provided"; \
         exit 1; \
     fi && \
     echo "Cloning repository via HTTPS..." && \
     git clone --depth 1 --no-tags --single-branch -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner-backend.git . && \
-    COMMIT_HASH=`git rev-parse HEAD 2>/dev/null || echo "unknown"` && \
-    echo "✓ Successfully cloned meal-planner-backend repository (commit: $${COMMIT_HASH})" && \
-    echo "✓ Repository is up-to-date with latest from main branch" && \
+    COMMIT_HASH=$(git rev-parse HEAD 2>/dev/null || echo "unknown") && \
+    echo "Successfully cloned meal-planner-backend repository (commit: ${COMMIT_HASH})" && \
+    echo "Repository is up-to-date with latest from main branch" && \
     if [ ! -f go.mod ]; then \
         echo "ERROR: Repository clone failed - go.mod not found"; \
         exit 1; \
@@ -44,7 +49,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 # ---- Runtime stage ----
-FROM alpine:3.19
+FROM alpine:3.22
 
 # Build arg for port (must be redeclared in this stage)
 ARG BACKEND_PORT

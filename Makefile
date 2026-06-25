@@ -2,7 +2,7 @@
 .PHONY: down
 
 up:
-	set -a && . ./.env && set +a && DOCKER_BUILDKIT=1 docker compose build --no-cache && docker compose up -d
+	set -a && . ./.env && set +a && DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose build --no-cache && docker compose up -d
 
 down:
 	docker compose down --volumes --rmi local

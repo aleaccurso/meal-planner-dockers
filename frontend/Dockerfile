@@ -1,15 +1,14 @@
+# syntax=docker/dockerfile:1
 # ---- Build stage ----
-FROM node:25 AS builder
+FROM node:26.4.0-alpine3.23 AS builder
 
-# Git is pre-installed in Debian-based node image
-# No need to install it separately
+# Patch Alpine packages and install git
+RUN apk upgrade --no-cache && \
+    apk add --no-cache git
 
 # Set working directory
 WORKDIR /app
 
-# Build args
-ARG GITHUB_TOKEN
-ARG GITHUB_USERNAME
 ARG VITE_APP_API_BASE_URL
 ARG VITE_APP_FIREBASE_API_KEY
 ARG VITE_APP_FIREBASE_AUTH_DOMAIN
@@ -31,16 +30,19 @@ ENV VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL} \
     VITE_APP_USERS_AVATAR_FOLDER=${VITE_APP_USERS_AVATAR_FOLDER} \
     VITE_APP_RECIPES_IMAGES_FOLDER=${VITE_APP_RECIPES_IMAGES_FOLDER}
 
-# Clone repository
-RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
-        echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
+# Clone repository using BuildKit secrets (never written to any image layer)
+RUN --mount=type=secret,id=github_token \
+    --mount=type=secret,id=github_username \
+    GITHUB_TOKEN=$(cat /run/secrets/github_token) && \
+    GITHUB_USERNAME=$(cat /run/secrets/github_username) && \
+    if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
+        echo "ERROR: github_token and github_username secrets must be provided"; \
         exit 1; \
     fi && \
     echo "Cloning repository via HTTPS..." && \
     git clone --depth 1 --no-tags --single-branch -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner.git . && \
-    COMMIT_HASH=`git rev-parse HEAD 2>/dev/null || echo "unknown"` && \
-    echo "✓ Successfully cloned meal-planner repository (commit: $${COMMIT_HASH})" && \
-    echo "✓ Repository is up-to-date with latest from main branch" && \
+    COMMIT_HASH=$(git rev-parse HEAD 2>/dev/null || echo "unknown") && \
+    echo "Successfully cloned meal-planner repository (commit: ${COMMIT_HASH})" && \
     if [ ! -f package.json ]; then \
         echo "ERROR: Repository clone failed - package.json not found"; \
         exit 1; \
@@ -51,15 +53,15 @@ RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
 RUN npm install
 
 # Build the application
-# VITE_APP_API_BASE_URL is available as environment variable for Vite to embed
 RUN echo "Building with VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL}" && \
     npm run build
 
 # ---- Runtime stage ----
-FROM nginx:alpine
+FROM nginx:stable-alpine3.23
 
-# Install gettext for envsubst
-RUN apk add --no-cache gettext
+# Patch Alpine packages and install envsubst
+RUN apk upgrade --no-cache && \
+    apk add --no-cache gettext
 
 # Copy nginx configuration template
 COPY nginx.conf /etc/nginx/templates/default.conf.template

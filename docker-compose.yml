@@ -29,9 +29,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
-        GITHUB_USERNAME: ${GITHUB_USERNAME}
+      secrets:
+        - github_token
+        - github_username
       network: host
     env_file:
       - .env
@@ -67,9 +67,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      secrets:
+        - github_token
+        - github_username
       args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
-        GITHUB_USERNAME: ${GITHUB_USERNAME}
         VITE_APP_API_BASE_URL: ${API_BASE_URL:-/api}
         VITE_APP_FIREBASE_API_KEY: ${FIREBASE_API_KEY}
         VITE_APP_FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}
@@ -93,6 +94,12 @@ services:
     restart: unless-stopped
     networks:
       - mealplanner_app_network
+
+secrets:
+  github_token:
+    environment: GITHUB_TOKEN
+  github_username:
+    environment: GITHUB_USERNAME
 
 volumes:
   mealplanner_db_data:

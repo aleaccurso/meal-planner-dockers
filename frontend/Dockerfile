@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 # ---- Build stage ----
 FROM node:26.4.0-alpine3.23 AS builder
 
@@ -30,13 +29,11 @@ ENV VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL} \
     VITE_APP_USERS_AVATAR_FOLDER=${VITE_APP_USERS_AVATAR_FOLDER} \
     VITE_APP_RECIPES_IMAGES_FOLDER=${VITE_APP_RECIPES_IMAGES_FOLDER}
 
-# Clone repository using BuildKit secrets (never written to any image layer)
-RUN --mount=type=secret,id=github_token \
-    --mount=type=secret,id=github_username \
-    GITHUB_TOKEN=$(cat /run/secrets/github_token) && \
-    GITHUB_USERNAME=$(cat /run/secrets/github_username) && \
-    if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
-        echo "ERROR: github_token and github_username secrets must be provided"; \
+ARG GITHUB_TOKEN
+ARG GITHUB_USERNAME
+
+RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
+        echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
         exit 1; \
     fi && \
     echo "Cloning repository via HTTPS..." && \

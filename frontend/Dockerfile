@@ -47,7 +47,7 @@ RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
     rm -rf .git
 
 # Install dependencies
-RUN npm install
+RUN npm install && npm install firebase
 
 # Build the application
 RUN echo "Building with VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL}" && \

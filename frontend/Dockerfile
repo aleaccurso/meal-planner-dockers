@@ -56,12 +56,11 @@ RUN echo "Building with VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL}" && \
 # ---- Runtime stage ----
 FROM nginx:stable-alpine3.23
 
-# Patch Alpine packages and install envsubst
-RUN apk upgrade --no-cache && \
-    apk add --no-cache gettext
+# Patch Alpine packages
+RUN apk upgrade --no-cache
 
-# Copy nginx configuration template
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
@@ -69,5 +68,4 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Expose port
 EXPOSE 80
 
-# Start nginx with environment variable substitution
-CMD ["/bin/sh", "-c", "envsubst '$$VITE_APP_BACKEND_HOST $$VITE_APP_BACKEND_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["nginx", "-g", "daemon off;"]

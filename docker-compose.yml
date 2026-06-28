@@ -16,7 +16,7 @@ services:
     volumes:
       - ${DB_DATA_PATH}:/var/lib/postgresql/data
     networks:
-      - mealplanner_backend_network
+      - mealplanner_network
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
@@ -60,8 +60,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - mealplanner_backend_network
-      - mealplanner_app_network
+      - mealplanner_network
 
   frontend:
     build:
@@ -83,22 +82,17 @@ services:
     env_file:
       - .env
     container_name: meal-planner-frontend
-    environment:
-      VITE_APP_BACKEND_HOST: backend
-      VITE_APP_BACKEND_PORT: 8010
     ports:
       - "5173:80"
     depends_on:
       - backend
     restart: unless-stopped
     networks:
-      - mealplanner_app_network
+      - mealplanner_network
 
 volumes:
   mealplanner_db_data:
 
 networks:
-  mealplanner_backend_network:
-    driver: bridge
-  mealplanner_app_network:
+  mealplanner_network:
     driver: bridge

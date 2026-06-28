@@ -38,7 +38,7 @@ services:
     container_name: meal-planner-backend
     environment:
       ENVIRONMENT: ${ENVIRONMENT}
-      DB_HOST: db
+      HOST: db
       DB_PORT: 5432
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}

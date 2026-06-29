@@ -45,6 +45,7 @@ RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
         echo "ERROR: Repository clone failed - package.json not found"; \
         exit 1; \
     fi && \
+    echo "$${COMMIT_HASH}" > /app/COMMIT_SHA && \
     rm -rf .git
 
 # Install dependencies
@@ -66,6 +67,7 @@ COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/COMMIT_SHA /usr/share/nginx/html/COMMIT_SHA
 
 # Expose port
 EXPOSE 80

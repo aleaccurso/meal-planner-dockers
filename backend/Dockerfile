@@ -29,6 +29,7 @@ RUN CACHE_BUST=`date +%s` && \
         echo "ERROR: Repository clone failed - go.mod not found"; \
         exit 1; \
     fi && \
+    echo "$${COMMIT_HASH}" > /app/COMMIT_SHA && \
     rm -rf .git
 
 # Verify repository was cloned
@@ -61,6 +62,7 @@ WORKDIR /app
 # Copy binary and migrations from builder
 COPY --from=builder /app/main .
 COPY --from=builder /app/database/migrations ./database/migrations
+COPY --from=builder /app/COMMIT_SHA .
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app

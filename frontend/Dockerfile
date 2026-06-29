@@ -48,6 +48,9 @@ RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
     echo "$${COMMIT_HASH}" > /app/COMMIT_SHA && \
     rm -rf .git
 
+# Install firebase package
+RUN npm install firebase
+
 # Install dependencies
 RUN npm install
 

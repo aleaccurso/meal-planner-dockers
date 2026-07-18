@@ -43,6 +43,8 @@ make up
 
 The frontend will be accessible at `http://<NAS_IP>:5173` and will automatically proxy API calls to the backend container.
 
+Every build (local or in Container Manager) always fetches the latest commit from the `meal-planner-backend`/`meal-planner` `main` branches — the Dockerfiles check GitHub for the latest commit on every build and only skip the rebuild if nothing changed, so there's no need for a "no cache" option (which Container Manager doesn't expose anyway). Just click Build to redeploy the latest code.
+
 ## Stop dockers
 
 ```bash

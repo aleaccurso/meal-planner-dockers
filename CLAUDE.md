@@ -16,7 +16,7 @@ make db-dump     # ./scripts/db-dump.sh — pg_dump to $DB_DUMPS_FOLDER
 make db-restore  # ./scripts/db-restore.sh — DESTRUCTIVE: drops+recreates public schema, prompts y/N
 ```
 
-To pick up new backend/frontend commits, rerun `make up` (or `docker compose build --no-cache`) — the Dockerfiles clone fresh on every build via a `CACHE_BUST` timestamp, so there's nothing to update in this repo itself for a code change.
+To pick up new backend/frontend commits, just rebuild (`make up` locally, or Build in Container Manager for production/NAS) — the Dockerfiles use BuildKit's git-context `ADD` (requires the `# syntax=docker/dockerfile:1` directive at the top of each Dockerfile) to clone `main`, which re-checks the remote ref against GitHub on every build and only reuses the cached layer if the commit is unchanged. This works with no `--no-cache` flag needed, which matters because Container Manager has no such option. There's nothing to update in this repo itself for a backend/frontend code change.
 
 ## Architecture
 

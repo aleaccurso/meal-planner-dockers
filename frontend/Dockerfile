@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 # ---- Build stage ----
 FROM node:25 AS builder
 
@@ -35,17 +37,22 @@ ENV VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL} \
 RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
         echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
         exit 1; \
-    fi && \
-    echo "Cloning repository via HTTPS..." && \
-    git clone --depth 1 --no-tags --single-branch -b main https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner.git . && \
-    COMMIT_HASH=`git rev-parse HEAD 2>/dev/null || echo "unknown"` && \
-    echo "✓ Successfully cloned meal-planner repository (commit: $${COMMIT_HASH})" && \
-    echo "✓ Repository is up-to-date with latest from main branch" && \
+    fi
+
+# BuildKit's git-context ADD resolves the `main` ref against GitHub on
+# every build and only reuses the cached layer if the commit is unchanged -
+# no manual cache-busting needed, works the same locally and in Container
+# Manager (which offers no "build without cache" option).
+ADD --keep-git-dir=true https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner.git#main /app
+
+# Record the commit and verify the clone succeeded
+RUN COMMIT_HASH=`git rev-parse HEAD 2>/dev/null || echo "unknown"` && \
+    echo "✓ Cloned meal-planner (commit: ${COMMIT_HASH})" && \
     if [ ! -f package.json ]; then \
         echo "ERROR: Repository clone failed - package.json not found"; \
         exit 1; \
     fi && \
-    echo "$${COMMIT_HASH}" > /app/COMMIT_SHA && \
+    echo "${COMMIT_HASH}" > /app/COMMIT_SHA && \
     rm -rf .git
 
 # Install firebase package

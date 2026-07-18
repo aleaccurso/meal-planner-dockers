@@ -5,7 +5,7 @@ up:
 	docker compose build --no-cache && docker compose up -d
 
 down:
-	docker compose down --volumes --rmi local
+	docker compose down --rmi local
 
 restart:
 	$(MAKE) down && $(MAKE) up

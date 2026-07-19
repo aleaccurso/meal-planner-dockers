@@ -9,8 +9,8 @@ Used both for local Docker runs and for deploying to a Synology NAS via Containe
 ## Key Commands
 
 ```bash
-make up          # docker compose build --no-cache && docker compose up -d
-make down        # docker compose down --volumes --rmi local
+make up          # check-env, source .env.backend + .env.frontend, docker compose build && up -d
+make down        # check-env, source .env.backend + .env.frontend, docker compose down --rmi local
 make restart     # down && up
 make db-dump     # ./scripts/db-dump.sh — pg_dump to $DB_DUMPS_FOLDER
 make db-restore  # ./scripts/db-restore.sh — DESTRUCTIVE: drops+recreates public schema, prompts y/N
@@ -28,14 +28,20 @@ Networks: `mealplanner_backend_network` (db ↔ backend) and `mealplanner_app_ne
 
 ## Environment
 
-Everything is driven by a root `.env` (gitignored, never commit it). Required vars span GitHub auth (`GITHUB_TOKEN`, `GITHUB_USERNAME` — used as Docker build args to clone the private repos), DB config (`DB_USER`, `DB_USER_PASSWORD`, `DB_NAME`, `DB_PORT`, `DB_DATA_PATH`), backend config (`BACKEND_PORT`, `ENVIRONMENT`, `JWT_SECRET`, `PROJECT_ID`, `DRIVER_NAME`, `INSTANCE_NAME`, `DB_DUMPS_FOLDER`, `USERS_AVATAR_FOLDER`, `RECIPES_IMAGES_FOLDER`), and frontend/Firebase config (`API_BASE_URL`, `FIREBASE_*`).
+Env vars are split by service into two gitignored files, plus a separate gitignored secret file — never commit any of them:
+
+- **`.env.backend`** — `ENVIRONMENT`, `JWT_SECRET`, `DB_USER`, `DB_USER_PASSWORD`, `DB_NAME`, `DB_PORT`, `DB_DATA_PATH`, `BACKEND_PORT`, `AUTH_CONFIG_PATH`, `INSTANCE_NAME`, `DB_DUMPS_FOLDER`, `USERS_AVATAR_FOLDER`, `RECIPES_IMAGES_FOLDER`, AI keys, SMTP creds.
+- **`.env.frontend`** — `API_BASE_URL`, `FIREBASE_*`, `USERS_AVATAR_FOLDER`, `RECIPES_IMAGES_FOLDER` (duplicated from backend — both services need these as build args).
+- **`.github_token.secret`** — raw GitHub token and nothing else, no `GITHUB_USERNAME` needed (see Security Notes below). Must have no trailing newline — BuildKit passes the file's raw bytes as the token, so a trailing `\n` silently breaks git auth (clone fails with `terminal prompts disabled`). Create/edit with `printf '%s' 'token' > .github_token.secret`, never `echo`.
+
+Compose only auto-loads a file literally named `.env` for its own `${VAR}` interpolation (build args, `ports:`, `volumes:`). Locally, `make up`/`make down` source `.env.backend` + `.env.frontend` into the shell first, so no `.env` file is needed. On the NAS (Container Manager, no shell), `.env` must be a manually maintained merge of the two files — **forgetting to re-merge after editing either file is what caused a prior production outage** (Compose interpolated empty DB credentials, Postgres refused to start, backend never connected).
 
 `ENVIRONMENT` (`LOCAL`, `LOCAL_DOCKER`, or `PRODUCTION`) selects connection details in `scripts/db-dump.sh` and `scripts/db-restore.sh`.
 
 ## Security Notes
 
 - `.ssh/` and `auth-config.json` exist in this working copy but are gitignored — never read, print, or reference their contents.
-- `GITHUB_TOKEN`/`GITHUB_USERNAME` are passed as Docker build args (`network: host`) to clone private repos over HTTPS during image build — do not log build output that would echo these, and don't add `RUN echo`-style debugging around the clone step.
+- GitHub auth for the `ADD <git-url>` clone steps uses BuildKit's reserved `GIT_AUTH_TOKEN` build secret (declared top-level in `docker-compose.yml`, backed by `.github_token.secret`, referenced via `build.secrets` on `backend`/`frontend`) — not a build arg. This keeps the token out of the URL and out of image history/metadata entirely. Do not log build output that would echo it, and don't add `RUN echo`-style debugging around the clone step.
 - `db-restore.sh` runs `DROP SCHEMA public CASCADE` before restoring — treat it as destructive; only run it (or suggest running it) with explicit user confirmation, same bar as other destructive git/db operations.
 
 ## Making Changes Here

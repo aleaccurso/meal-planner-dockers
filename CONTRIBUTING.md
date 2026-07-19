@@ -35,34 +35,46 @@ Thank you for your interest in contributing to the Meal Planner Docker setup! Th
    cd meal-planner-dockers
    ```
 
-2. **Create a `.env` file**
+2. **Create the env files**
 
-   Create a `.env` file in the root directory with the following variables:
+   This repo splits env vars by service, plus a separate file for the GitHub build secret. Create these three gitignored files in the root directory:
 
    ```env
-   # GitHub Configuration
-   GITHUB_TOKEN=your_github_personal_access_token
-   GITHUB_USERNAME=your_github_username
-
-   # Database Configuration
+   # .env.backend
+   ENVIRONMENT=LOCAL
+   JWT_SECRET=your_jwt_secret
    DB_USER=postgres
    DB_USER_PASSWORD=your_password
    DB_NAME=meal_planner
    DB_PORT=5432
    DB_DATA_PATH=./data/postgres
-
-   # Backend Configuration
    BACKEND_PORT=8010
-   ENVIRONMENT=LOCAL
-   PROJECT_ID=your_gcp_project_id
-   DRIVER_NAME=cloudsqlpostgres
+   AUTH_CONFIG_PATH=./auth-config.json
    INSTANCE_NAME=meal-planner-db
-
-   # Frontend Configuration
-   API_BASE_URL=/api
+   DB_DUMPS_FOLDER=./dumps
+   USERS_AVATAR_FOLDER=./avatars
+   RECIPES_IMAGES_FOLDER=./recipe-images
+   # plus AI keys (GEMINI_API_KEY, CLAUDE_API_KEY, ...) and SMTP creds
    ```
 
-   **Important**: Never commit the `.env` file to the repository. It contains sensitive information.
+   ```env
+   # .env.frontend
+   API_BASE_URL=/api
+   USERS_AVATAR_FOLDER=./avatars
+   RECIPES_IMAGES_FOLDER=./recipe-images
+   # plus FIREBASE_* vars
+   ```
+
+   ```
+   # .github_token.secret — raw token only, no key= prefix, no trailing newline
+   your_github_personal_access_token
+   ```
+
+   `.github_token.secret` is mounted into the build as a Docker BuildKit secret (`GIT_AUTH_TOKEN`) that authenticates the `ADD <git-url>` clone steps — no `GITHUB_USERNAME` is needed and the token never appears in a URL or image layer. **The file must not have a trailing newline** — BuildKit passes its raw bytes as the token, and a trailing `\n` silently breaks git auth (clone fails with `terminal prompts disabled`). Use `printf '%s' 'your_token' > .github_token.secret`, not `echo` (which appends `\n`).
+
+   **Important**: Never commit any of these three files to the repository. They contain sensitive information.
+
+   Compose itself still needs a file literally named `.env` for its own `${VAR}` interpolation (build args, ports, volumes) — `make up`/`make down` handle this locally by sourcing `.env.backend` and `.env.frontend` into the shell before invoking `docker compose`, so you don't need to create `.env` by hand for local dev. (Manually merging into `.env` is only required for the NAS/Container Manager deployment — see the root README.)
 
 ## Development Setup
 
@@ -118,8 +130,9 @@ meal-planner-dockers/
 │   └── Dockerfile          # Database service Dockerfile
 ├── docker-compose.yml      # Main Docker Compose configuration
 ├── Makefile                # Convenience commands
-├── last-commits.json       # Tracks last deployed commits
-├── .env                    # Environment variables (not in git)
+├── .env.backend            # Backend env vars (not in git)
+├── .env.frontend           # Frontend env vars (not in git)
+├── .github_token.secret    # Raw GitHub token, BuildKit build secret (not in git)
 └── README.md               # Project documentation
 ```
 
@@ -306,7 +319,7 @@ make restart
 
 #### Build Failures
 
-- **GitHub authentication errors**: Verify `GITHUB_TOKEN` and `GITHUB_USERNAME` are set correctly
+- **GitHub authentication errors**: Verify `.github_token.secret` exists and contains a valid token
 - **Port conflicts**: Check if ports 5173, 8010, or 5432 are already in use
 - **Permission errors**: Ensure Docker has proper permissions
 
@@ -351,22 +364,6 @@ make restart
    - Verify API calls work through the frontend
    - Check backend logs for API requests
 
-### Testing Different Configurations
-
-Create different `.env` files for different environments:
-
-```bash
-# .env.local
-# .env.staging
-# .env.production
-```
-
-Use them with:
-
-```bash
-docker compose --env-file .env.local up
-```
-
 ## Getting Help
 
 ### Resources
@@ -393,7 +390,7 @@ If you need help:
 A: The Dockerfiles clone from GitHub during build. Update the code in the respective repositories, then rebuild the containers.
 
 **Q: How do I change environment variables?**
-A: Update your `.env` file and restart the services with `make restart`.
+A: Update `.env.backend`/`.env.frontend` and restart the services with `make restart`. (On the NAS, also re-merge `.env` — see the root README.)
 
 **Q: How do I access the database directly?**
 A: Use `docker compose exec db psql -U postgres -d meal_planner` or connect from a database client to `localhost:5432`.

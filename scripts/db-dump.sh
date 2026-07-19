@@ -1,22 +1,22 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-ENV_FILE="$SCRIPT_DIR/../.env"
+ENV_FILE="$SCRIPT_DIR/../.env.backend"
 
 if [ -f "$ENV_FILE" ]; then
     export $(grep -v '^#' "$ENV_FILE" | xargs)
 else
-    echo ".env file not found at $ENV_FILE"
+    echo ".env.backend file not found at $ENV_FILE"
     exit 1
 fi
 
 if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ]; then
-    echo "DB_NAME or DB_USER is not set in .env file!"
+    echo "DB_NAME or DB_USER is not set in .env.backend file!"
     exit 1
 fi
 
 if [ -z "$DB_DUMPS_FOLDER" ]; then
-    echo "DB_DUMPS_FOLDER is not set in .env file!"
+    echo "DB_DUMPS_FOLDER is not set in .env.backend file!"
     exit 1
 fi
 
@@ -28,7 +28,7 @@ DUMP_FILE="$DUMPS_DIR/${DB_NAME}_${TIMESTAMP}.sql"
 
 if [ "$ENVIRONMENT" = "LOCAL_DOCKER" ]; then
     if [ -z "$INSTANCE_NAME" ]; then
-        echo "INSTANCE_NAME is not set in .env file!"
+        echo "INSTANCE_NAME is not set in .env.backend file!"
         exit 1
     fi
     echo "Dumping local Docker PostgreSQL database '$DB_NAME' from container '$INSTANCE_NAME'..."
@@ -40,7 +40,7 @@ elif [ "$ENVIRONMENT" = "LOCAL" ]; then
         -h "localhost" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" > "$DUMP_FILE"
 elif [ "$ENVIRONMENT" = "PRODUCTION" ]; then
     if [ -z "$DB_HOST" ]; then
-        echo "DB_HOST is not set in .env file!"
+        echo "DB_HOST is not set in .env.backend file!"
         exit 1
     fi
     echo "Dumping production PostgreSQL database '$DB_NAME' on Synology NAS ($DB_HOST)..."

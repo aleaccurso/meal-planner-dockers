@@ -12,20 +12,13 @@ ENV GOTOOLCHAIN=auto
 # Set working directory
 WORKDIR /app
 
-# Build args
-ARG GITHUB_TOKEN
-ARG GITHUB_USERNAME
-
-RUN if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then \
-        echo "ERROR: GITHUB_TOKEN and GITHUB_USERNAME must be provided as build args"; \
-        exit 1; \
-    fi
-
 # BuildKit's git-context ADD resolves the `main` ref against GitHub on
 # every build and only reuses the cached layer if the commit is unchanged -
 # no manual cache-busting needed, works the same locally and in Container
 # Manager (which offers no "build without cache" option).
-ADD --keep-git-dir=true https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/aleaccurso/meal-planner-backend.git#main /app
+# Auth is handled by BuildKit's reserved GIT_AUTH_TOKEN build secret, not
+# a URL-embedded credential (which would risk persisting in image history).
+ADD --keep-git-dir=true https://github.com/aleaccurso/meal-planner-backend.git#main /app
 
 # Record the commit and verify the clone succeeded
 RUN COMMIT_HASH=`git rev-parse HEAD 2>/dev/null || echo "unknown"` && \

@@ -16,7 +16,7 @@ make db-dump     # ./scripts/db-dump.sh — pg_dump to $DB_DUMPS_FOLDER
 make db-restore  # ./scripts/db-restore.sh — DESTRUCTIVE: drops+recreates public schema, prompts y/N
 ```
 
-To pick up new backend/frontend commits, just rebuild (`make up` locally, or Build in Container Manager for production/NAS) — the Dockerfiles use BuildKit's git-context `ADD` (requires the `# syntax=docker/dockerfile:1` directive at the top of each Dockerfile) to clone `main`, which re-checks the remote ref against GitHub on every build and only reuses the cached layer if the commit is unchanged. This works with no `--no-cache` flag needed, which matters because Container Manager has no such option. There's nothing to update in this repo itself for a backend/frontend code change.
+To pick up new backend/frontend commits, rebuild (`make up` locally, or Build in Container Manager for production/NAS). The clone step is a plain `RUN git clone` (see Security Notes below for why), so it follows normal Docker layer caching — if a rebuild reuses a warm cache and doesn't pick up new commits, prune the cached builder-stage image for that service (Container Manager has no `--no-cache` option) before rebuilding. There's nothing to update in this repo itself for a backend/frontend code change.
 
 ## Architecture
 
@@ -28,11 +28,10 @@ Networks: `mealplanner_backend_network` (db ↔ backend) and `mealplanner_app_ne
 
 ## Environment
 
-Env vars are split by service into two gitignored files, plus a separate gitignored secret file — never commit any of them:
+Env vars are split by service into two gitignored files — never commit either of them:
 
-- **`.env.backend`** — `ENVIRONMENT`, `JWT_SECRET`, `DB_USER`, `DB_USER_PASSWORD`, `DB_NAME`, `DB_PORT`, `DB_DATA_PATH`, `BACKEND_PORT`, `AUTH_CONFIG_PATH`, `INSTANCE_NAME`, `DB_DUMPS_FOLDER`, `USERS_AVATAR_FOLDER`, `RECIPES_IMAGES_FOLDER`, AI keys, SMTP creds.
+- **`.env.backend`** — `ENVIRONMENT`, `JWT_SECRET`, `DB_USER`, `DB_USER_PASSWORD`, `DB_NAME`, `DB_PORT`, `DB_DATA_PATH`, `BACKEND_PORT`, `AUTH_CONFIG_PATH`, `INSTANCE_NAME`, `DB_DUMPS_FOLDER`, `USERS_AVATAR_FOLDER`, `RECIPES_IMAGES_FOLDER`, `GIT_AUTH_TOKEN` (raw GitHub token, no `GITHUB_USERNAME` needed — see Security Notes below), AI keys, SMTP creds.
 - **`.env.frontend`** — `API_BASE_URL`, `FIREBASE_*`, `USERS_AVATAR_FOLDER`, `RECIPES_IMAGES_FOLDER` (duplicated from backend — both services need these as build args).
-- **`.github_token.secret`** — raw GitHub token and nothing else, no `GITHUB_USERNAME` needed (see Security Notes below). Must have no trailing newline — BuildKit passes the file's raw bytes as the token, so a trailing `\n` silently breaks git auth (clone fails with `terminal prompts disabled`). Create/edit with `printf '%s' 'token' > .github_token.secret`, never `echo`.
 
 Compose only auto-loads a file literally named `.env` for its own `${VAR}` interpolation (build args, `ports:`, `volumes:`). Locally, `make up`/`make down` source `.env.backend` + `.env.frontend` into the shell first, so no `.env` file is needed. On the NAS (Container Manager, no shell), `.env` must be a manually maintained merge of the two files — **forgetting to re-merge after editing either file is what caused a prior production outage** (Compose interpolated empty DB credentials, Postgres refused to start, backend never connected).
 
@@ -41,7 +40,7 @@ Compose only auto-loads a file literally named `.env` for its own `${VAR}` inter
 ## Security Notes
 
 - `.ssh/` and `auth-config.json` exist in this working copy but are gitignored — never read, print, or reference their contents.
-- GitHub auth for the `ADD <git-url>` clone steps uses BuildKit's reserved `GIT_AUTH_TOKEN` build secret (declared top-level in `docker-compose.yml`, backed by `.github_token.secret`, referenced via `build.secrets` on `backend`/`frontend`) — not a build arg. This keeps the token out of the URL and out of image history/metadata entirely. Do not log build output that would echo it, and don't add `RUN echo`-style debugging around the clone step.
+- GitHub auth for the git clone steps used to go through BuildKit's reserved `GIT_AUTH_TOKEN` build secret (Compose's `build.secrets`), but Synology Container Manager's compose build rejects `build.secrets` as an invalid property and doesn't honor `DOCKER_BUILDKIT=1` to fix it — its build doesn't go through BuildKit at all. So `GIT_AUTH_TOKEN` is now a plain build `ARG`, declared only in the discarded builder stage of `backend/Dockerfile`/`frontend/Dockerfile`, and passed to `git clone` via `-c http.extraheader=...` (never a URL) so it never appears in build logs or in git's own output. It does still end up in that builder stage's `docker history` (not the final runtime image) — the standard tradeoff when BuildKit secrets aren't available. Do not log build output that would echo it, and don't add `RUN echo`-style debugging around the clone step or reintroduce a URL-embedded credential.
 - `db-restore.sh` runs `DROP SCHEMA public CASCADE` before restoring — treat it as destructive; only run it (or suggest running it) with explicit user confirmation, same bar as other destructive git/db operations.
 
 ## Making Changes Here

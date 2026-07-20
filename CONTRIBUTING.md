@@ -37,7 +37,7 @@ Thank you for your interest in contributing to the Meal Planner Docker setup! Th
 
 2. **Create the env files**
 
-   This repo splits env vars by service, plus a separate file for the GitHub build secret. Create these three gitignored files in the root directory:
+   This repo splits env vars by service. Create these two gitignored files in the root directory:
 
    ```env
    # .env.backend
@@ -54,6 +54,7 @@ Thank you for your interest in contributing to the Meal Planner Docker setup! Th
    DB_DUMPS_FOLDER=./dumps
    USERS_AVATAR_FOLDER=./avatars
    RECIPES_IMAGES_FOLDER=./recipe-images
+   GIT_AUTH_TOKEN=your_github_personal_access_token
    # plus AI keys (GEMINI_API_KEY, CLAUDE_API_KEY, ...) and SMTP creds
    ```
 
@@ -65,14 +66,9 @@ Thank you for your interest in contributing to the Meal Planner Docker setup! Th
    # plus FIREBASE_* vars
    ```
 
-   ```
-   # .github_token.secret — raw token only, no key= prefix, no trailing newline
-   your_github_personal_access_token
-   ```
+   `GIT_AUTH_TOKEN` (no `GITHUB_USERNAME` needed) is passed to the backend/frontend builds as a build `ARG`, used only in each Dockerfile's discarded builder stage, and passed to `git clone` via an HTTP header — never a URL — so it never appears in build logs or image layers of the final image.
 
-   `.github_token.secret` is mounted into the build as a Docker BuildKit secret (`GIT_AUTH_TOKEN`) that authenticates the `ADD <git-url>` clone steps — no `GITHUB_USERNAME` is needed and the token never appears in a URL or image layer. **The file must not have a trailing newline** — BuildKit passes its raw bytes as the token, and a trailing `\n` silently breaks git auth (clone fails with `terminal prompts disabled`). Use `printf '%s' 'your_token' > .github_token.secret`, not `echo` (which appends `\n`).
-
-   **Important**: Never commit any of these three files to the repository. They contain sensitive information.
+   **Important**: Never commit either of these files to the repository. They contain sensitive information.
 
    Compose itself still needs a file literally named `.env` for its own `${VAR}` interpolation (build args, ports, volumes) — `make up`/`make down` handle this locally by sourcing `.env.backend` and `.env.frontend` into the shell before invoking `docker compose`, so you don't need to create `.env` by hand for local dev. (Manually merging into `.env` is only required for the NAS/Container Manager deployment — see the root README.)
 
@@ -130,9 +126,8 @@ meal-planner-dockers/
 │   └── Dockerfile          # Database service Dockerfile
 ├── docker-compose.yml      # Main Docker Compose configuration
 ├── Makefile                # Convenience commands
-├── .env.backend            # Backend env vars (not in git)
+├── .env.backend            # Backend env vars incl. GIT_AUTH_TOKEN (not in git)
 ├── .env.frontend           # Frontend env vars (not in git)
-├── .github_token.secret    # Raw GitHub token, BuildKit build secret (not in git)
 └── README.md               # Project documentation
 ```
 
@@ -319,7 +314,7 @@ make restart
 
 #### Build Failures
 
-- **GitHub authentication errors**: Verify `.github_token.secret` exists and contains a valid token
+- **GitHub authentication errors**: Verify `GIT_AUTH_TOKEN` is set in `.env.backend` and contains a valid token
 - **Port conflicts**: Check if ports 5173, 8010, or 5432 are already in use
 - **Permission errors**: Ensure Docker has proper permissions
 

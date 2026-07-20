@@ -12,23 +12,28 @@ ENV GOTOOLCHAIN=auto
 # Set working directory
 WORKDIR /app
 
-# BuildKit's git-context ADD resolves the `main` ref against GitHub on
-# every build and only reuses the cached layer if the commit is unchanged -
-# no manual cache-busting needed, works the same locally and in Container
-# Manager (which offers no "build without cache" option).
-# Auth is handled by BuildKit's reserved GIT_AUTH_TOKEN build secret, not
-# a URL-embedded credential (which would risk persisting in image history).
-ADD --keep-git-dir=true https://github.com/aleaccurso/meal-planner-backend.git#main /app
+# Container Manager's compose build doesn't support BuildKit's git-context
+# ADD + build.secrets (its compose parser rejects `secrets` under `build:`,
+# and DOCKER_BUILDKIT=1 has no effect there), so auth can't use the reserved
+# GIT_AUTH_TOKEN build secret. Instead GIT_AUTH_TOKEN is a plain build ARG,
+# used only in this discarded builder stage, and passed to git as an HTTP
+# header (never a URL) so it never appears in build logs or git's own
+# output. It still ends up in this builder stage's `docker history` (not
+# the final image) - the standard pre-BuildKit-secrets tradeoff.
+ARG GIT_AUTH_TOKEN
+RUN AUTH_HEADER="AUTHORIZATION: basic $(printf '%s' "x-access-token:${GIT_AUTH_TOKEN}" | base64 -w0)" && \
+    git clone -c http.extraheader="${AUTH_HEADER}" --branch main --single-branch \
+      https://github.com/aleaccurso/meal-planner-backend.git /app
 
 # Record the commit and verify the clone succeeded
-RUN COMMIT_HASH=`git rev-parse HEAD 2>/dev/null || echo "unknown"` && \
+RUN COMMIT_HASH=`git -C /app rev-parse HEAD 2>/dev/null || echo "unknown"` && \
     echo "✓ Cloned meal-planner-backend (commit: ${COMMIT_HASH})" && \
-    if [ ! -f go.mod ]; then \
+    if [ ! -f /app/go.mod ]; then \
         echo "ERROR: Repository clone failed - go.mod not found"; \
         exit 1; \
     fi && \
     echo "${COMMIT_HASH}" > /app/COMMIT_SHA && \
-    rm -rf .git
+    rm -rf /app/.git
 
 # Download Go modules
 RUN go mod download

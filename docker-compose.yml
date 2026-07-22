@@ -35,7 +35,11 @@ services:
       - .env.backend
     container_name: meal-planner-backend
     environment:
-      DB_HOST: ${DB_HOST}
+      # Hardcoded literal (not ${DB_HOST}): .env.backend's DB_HOST is the NAS's
+      # external LAN IP, used by scripts/db-dump.sh + db-restore.sh running
+      # outside Docker. The backend container instead needs the Compose
+      # service name to reach Postgres over mealplanner_backend_network.
+      DB_HOST: db
       DB_PORT: 5432
       AUTH_CONFIG_PATH: /app/auth-config.json
     ports:

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- Build stage ----
-FROM node:25 AS builder
+FROM node:26 AS builder
 
 # Git is pre-installed in Debian-based node image
 # No need to install it separately

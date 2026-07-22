@@ -37,6 +37,8 @@ Compose only auto-loads a file literally named `.env` for its own `${VAR}` inter
 
 `ENVIRONMENT` (`LOCAL`, `LOCAL_DOCKER`, or `PRODUCTION`) selects connection details in `scripts/db-dump.sh` and `scripts/db-restore.sh`.
 
+**Never edit any `.env*` file** (`.env`, `.env.backend`, `.env.frontend`, `.env.production.*`, etc.) — they hold live credentials and production config. If a value needs to change, tell the user what to change and let them edit it themselves.
+
 ## Security Notes
 
 - `.ssh/` and `auth-config.json` exist in this working copy but are gitignored — never read, print, or reference their contents.

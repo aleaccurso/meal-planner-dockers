@@ -39,13 +39,13 @@ elif [ "$ENVIRONMENT" = "LOCAL" ]; then
     PGPASSWORD="$DB_USER_PASSWORD" pg_dump \
         -h "localhost" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" > "$DUMP_FILE"
 elif [ "$ENVIRONMENT" = "PRODUCTION" ]; then
-    if [ -z "$DB_HOST" ]; then
-        echo "DB_HOST is not set in .env.backend file!"
+    if [ -z "$HOST" ]; then
+        echo "HOST is not set in .env.backend file!"
         exit 1
     fi
-    echo "Dumping production PostgreSQL database '$DB_NAME' on Synology NAS ($DB_HOST)..."
+    echo "Dumping production PostgreSQL database '$DB_NAME' on Synology NAS ($HOST)..."
     PGPASSWORD="$DB_USER_PASSWORD" pg_dump \
-        -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" > "$DUMP_FILE"
+        -h "$HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" > "$DUMP_FILE"
 else
     echo "Unknown ENVIRONMENT: '$ENVIRONMENT'. Expected LOCAL, LOCAL_DOCKER, or PRODUCTION."
     exit 1

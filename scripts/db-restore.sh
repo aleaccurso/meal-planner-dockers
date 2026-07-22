@@ -48,13 +48,13 @@ elif [ "$ENVIRONMENT" = "LOCAL" ]; then
         -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" \
         && PGPASSWORD="$DB_USER_PASSWORD" psql -h "localhost" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" < "$DUMP_FILE"
 elif [ "$ENVIRONMENT" = "PRODUCTION" ]; then
-    if [ -z "$DB_HOST" ]; then
-        echo "DB_HOST is not set in .env.backend file!"
+    if [ -z "$HOST" ]; then
+        echo "HOST is not set in .env.backend file!"
         exit 1
     fi
-    PGPASSWORD="$DB_USER_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+    PGPASSWORD="$DB_USER_PASSWORD" psql -h "$HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
         -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" \
-        && PGPASSWORD="$DB_USER_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" < "$DUMP_FILE"
+        && PGPASSWORD="$DB_USER_PASSWORD" psql -h "$HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" < "$DUMP_FILE"
 else
     echo "Unknown ENVIRONMENT: '$ENVIRONMENT'. Expected LOCAL, LOCAL_DOCKER, or PRODUCTION."
     exit 1

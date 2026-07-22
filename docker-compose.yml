@@ -35,7 +35,7 @@ services:
       - .env.backend
     container_name: meal-planner-backend
     environment:
-      DB_HOST: db
+      HOST: ${HOST}
       DB_PORT: 5432
       AUTH_CONFIG_PATH: /app/auth-config.json
     ports:

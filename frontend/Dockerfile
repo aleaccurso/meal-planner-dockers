@@ -55,6 +55,9 @@ RUN COMMIT_HASH=`git -C /app rev-parse HEAD 2>/dev/null || echo "unknown"` && \
     echo "${COMMIT_HASH}" > /app/COMMIT_SHA && \
     rm -rf /app/.git
 
+# Update npm to latest
+RUN npm install -g npm@latest
+
 # Install firebase package
 RUN npm install firebase
 

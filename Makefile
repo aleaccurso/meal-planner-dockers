@@ -12,7 +12,7 @@ check-env:
 
 up: check-env
 	set -a; . ./.env.backend; . ./.env.frontend; set +a; \
-	docker compose build --no-cache && docker compose up -d
+	docker compose build && docker compose up -d
 
 down: check-env
 	set -a; . ./.env.backend; . ./.env.frontend; set +a; \

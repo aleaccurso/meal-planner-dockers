@@ -21,6 +21,7 @@ WORKDIR /app
 # output. It still ends up in this builder stage's `docker history` (not
 # the final image) - the standard pre-BuildKit-secrets tradeoff.
 ARG GIT_AUTH_TOKEN
+ARG CACHEBUST=1
 RUN AUTH_HEADER="AUTHORIZATION: basic $(printf '%s' "x-access-token:${GIT_AUTH_TOKEN}" | base64 -w0)" && \
     git clone -c http.extraheader="${AUTH_HEADER}" --branch main --single-branch \
       https://github.com/aleaccurso/meal-planner-backend.git /app

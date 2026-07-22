@@ -33,7 +33,7 @@ Container Manager has no shell, so `.env` must be a **manually maintained** merg
 
 The frontend will be accessible at `http://<NAS_IP>:5173` and will automatically proxy API calls to the backend container.
 
-The git clone step follows normal Docker layer caching (see Security Notes in [`CLAUDE.md`](CLAUDE.md)), so a rebuild that hits a warm cache may not pick up new commits. If Build doesn't seem to pick up new code, prune the builder-stage image/cache for that service before rebuilding.
+The git clone step follows normal Docker layer caching (see Security Notes in [`CLAUDE.md`](CLAUDE.md)), so a rebuild that hits a warm cache may not pick up new commits — removing the container and final image does **not** clear this, since the build cache is stored separately. To force a fresh clone, set `CACHEBUST` to a new value (e.g. a timestamp) in `.env` before building — it's wired into both Dockerfiles' build args specifically to invalidate the clone layer's cache. If that's not available in your setup, prune the builder-stage image/cache for that service before rebuilding instead.
 
 ## Stop dockers
 

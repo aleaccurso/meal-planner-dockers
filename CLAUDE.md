@@ -16,7 +16,7 @@ make db-dump     # ./scripts/db-dump.sh — pg_dump to $DB_DUMPS_FOLDER
 make db-restore  # ./scripts/db-restore.sh — DESTRUCTIVE: drops+recreates public schema, prompts y/N
 ```
 
-To pick up new backend/frontend commits, rebuild (`make up` locally, or Build in Container Manager for production/NAS). The clone step is a plain `RUN git clone` (see Security Notes below for why), so it follows normal Docker layer caching — if a rebuild reuses a warm cache and doesn't pick up new commits, prune the cached builder-stage image for that service (Container Manager has no `--no-cache` option) before rebuilding. There's nothing to update in this repo itself for a backend/frontend code change.
+To pick up new backend/frontend commits, rebuild (`make up` locally, or Build in Container Manager for production/NAS). The clone step is a plain `RUN git clone` (see Security Notes below for why), so it follows normal Docker layer caching — a rebuild that reuses a warm cache won't pick up new commits, and removing the container/final image does not clear this (the build cache is stored separately, so this can bite even after a clean container+image removal). Both Dockerfiles take a `CACHEBUST` build arg (wired through `docker-compose.yml`'s `args:`) that's referenced inside the clone `RUN` specifically so bumping its value (e.g. to a timestamp) invalidates that layer's cache and forces a fresh clone — set `CACHEBUST` in `.env` before building on the NAS. Fall back to pruning the cached builder-stage image for that service (Container Manager has no `--no-cache` option) only if `CACHEBUST` isn't available in your setup. There's nothing else to update in this repo itself for a backend/frontend code change.
 
 ## Architecture
 

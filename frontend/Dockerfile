@@ -21,11 +21,11 @@ ARG VITE_APP_FIREBASE_APP_ID
 ARG VITE_APP_USERS_AVATAR_FOLDER
 ARG VITE_APP_RECIPES_IMAGES_FOLDER
 
-# Bump CACHEBUST (compose build arg, see docker-compose.yml) to force Docker to
-# skip its cached layer for this step and re-clone latest main. Referencing it
-# in the RUN command is what makes it actually invalidate the cache - an ARG
-# that's merely declared but unused here has no effect on the layer's cache key.
-ARG CACHEBUST=1
+# GIT_REF (compose build arg, see docker-compose.yml) selects which tag to
+# clone. deploy/tag-release.sh mints a unique tag name for every real build,
+# so referencing GIT_REF directly in the clone command below makes it part of
+# this layer's cache key - Docker only re-clones when the ref actually changes.
+ARG GIT_REF=main
 
 # Expose all Vite env vars so they get embedded into the bundle at build time
 ENV VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL} \
@@ -46,9 +46,8 @@ ENV VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL} \
 # header (never a URL) so it never appears in build logs or git's own
 # output. It still ends up in this builder stage's `docker history` (not
 # the final image) - the standard pre-BuildKit-secrets tradeoff.
-RUN echo "cachebust=${CACHEBUST}" && \
-    AUTH_HEADER="AUTHORIZATION: basic $(printf '%s' "x-access-token:${GIT_AUTH_TOKEN}" | base64 -w0)" && \
-    git clone -c http.extraheader="${AUTH_HEADER}" --branch main --single-branch \
+RUN AUTH_HEADER="AUTHORIZATION: basic $(printf '%s' "x-access-token:${GIT_AUTH_TOKEN}" | base64 -w0)" && \
+    git clone -c http.extraheader="${AUTH_HEADER}" --branch ${GIT_REF} --single-branch \
       https://github.com/aleaccurso/meal-planner.git /app
 
 # Record the commit and verify the clone succeeded

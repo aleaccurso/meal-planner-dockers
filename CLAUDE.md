@@ -2,21 +2,21 @@
 
 ## Project
 
-Docker Compose deployment for the Meal Planner app: `db` (PostgreSQL), `backend` (Go API), `frontend` (React SPA served by Nginx). This repo does not contain application source — the backend and frontend Dockerfiles `git clone` the `meal-planner-backend` and `meal-planner` repos directly from GitHub (`main` branch) during the image build.
+Docker Compose deployment for the Meal Planner app: `db` (PostgreSQL), `backend` (Go API), `frontend` (React SPA served by Nginx). This repo does not contain application source — the backend and frontend Dockerfiles `git clone` the `meal-planner-backend` and `meal-planner` repos directly from GitHub during the image build, at a `GIT_REF` build arg pinned to an auto-generated release tag (see Key Commands) rather than the `main` branch directly.
 
 Used both for local Docker runs and for deploying to a Synology NAS via Container Manager.
 
 ## Key Commands
 
 ```bash
-make up          # check-env, source .env.backend + .env.frontend, docker compose build && up -d
+make up          # check-env, tag-release (../deploy/tag-release.sh), source .env.backend + .env.frontend + .deploy-tags.env, docker compose build && up -d
 make down        # check-env, source .env.backend + .env.frontend, docker compose down --rmi local
 make restart     # down && up
 make db-dump     # ./scripts/db-dump.sh — pg_dump to $DB_DUMPS_FOLDER
 make db-restore  # ./scripts/db-restore.sh — DESTRUCTIVE: drops+recreates public schema, prompts y/N
 ```
 
-To pick up new backend/frontend commits, rebuild (`make up` locally, or Build in Container Manager for production/NAS). The clone step is a plain `RUN git clone` (see Security Notes below for why), so it follows normal Docker layer caching — a rebuild that reuses a warm cache won't pick up new commits, and removing the container/final image does not clear this (the build cache is stored separately, so this can bite even after a clean container+image removal). Both Dockerfiles take a `CACHEBUST` build arg (wired through `docker-compose.yml`'s `args:`) that's referenced inside the clone `RUN` specifically so bumping its value (e.g. to a timestamp) invalidates that layer's cache and forces a fresh clone — set `CACHEBUST` in `.env` before building on the NAS. Fall back to pruning the cached builder-stage image for that service (Container Manager has no `--no-cache` option) only if `CACHEBUST` isn't available in your setup. There's nothing else to update in this repo itself for a backend/frontend code change.
+To pick up new backend/frontend commits, rebuild (`make up` locally, or `../deploy/tag-release.sh --build`/GUI Build in Container Manager for production/NAS). The clone step is a plain `RUN git clone` (see Security Notes below for why), so it follows normal Docker layer caching, but this is no longer a footgun: both Dockerfiles now clone a `GIT_REF` build arg (a tag, not the `main` branch), and `../deploy/tag-release.sh` — run automatically by `make up`, or manually via `./tag-release.sh [--build]` on the NAS — mints a fresh `v<YYYY.MM.DD>.<N>` tag per repo whenever that repo's `main` has moved, writing the resulting tag names to `.deploy-tags.env` (gitignored). Since the tag name only ever changes when there's something new to ship, Docker's cache busts exactly when it should — a repo with no new commits correctly reuses its cached layers instead of rebuilding from scratch. See `../deploy/tag-release.sh` and `../plans/enforce-fresh-main-builds.md` (umbrella repo) for the full design, including the cross-machine GitHub-ref locking that lets this run safely from both your Mac and the NAS. There's nothing else to update in this repo itself for a backend/frontend code change.
 
 ## Architecture
 
@@ -30,7 +30,7 @@ Networks: `mealplanner_backend_network` (db ↔ backend) and `mealplanner_app_ne
 
 Env vars are split by service into two gitignored files — never commit either of them:
 
-- **`.env.backend`** — `ENVIRONMENT`, `JWT_SECRET`, `DB_USER`, `DB_USER_PASSWORD`, `DB_NAME`, `DB_PORT`, `DB_DATA_PATH`, `BACKEND_PORT`, `AUTH_CONFIG_PATH`, `INSTANCE_NAME`, `DB_DUMPS_FOLDER`, `USERS_AVATAR_FOLDER`, `RECIPES_IMAGES_FOLDER`, `GIT_AUTH_TOKEN` (raw GitHub token, no `GITHUB_USERNAME` needed — see Security Notes below), AI keys, SMTP creds.
+- **`.env.backend`** — `ENVIRONMENT`, `JWT_SECRET`, `DB_USER`, `DB_USER_PASSWORD`, `DB_NAME`, `DB_PORT`, `DB_DATA_PATH`, `BACKEND_PORT`, `AUTH_CONFIG_PATH`, `INSTANCE_NAME`, `DB_DUMPS_FOLDER`, `USERS_AVATAR_FOLDER`, `RECIPES_IMAGES_FOLDER`, `GIT_AUTH_TOKEN` (raw GitHub token, no `GITHUB_USERNAME` needed, needs push/write scope on both source repos for `../deploy/tag-release.sh` — see Security Notes below), AI keys, SMTP creds.
 - **`.env.frontend`** — `API_BASE_URL`, `FIREBASE_*`, `USERS_AVATAR_FOLDER`, `RECIPES_IMAGES_FOLDER` (duplicated from backend — both services need these as build args).
 
 Compose only auto-loads a file literally named `.env` for its own `${VAR}` interpolation (build args, `ports:`, `volumes:`). Locally, `make up`/`make down` source `.env.backend` + `.env.frontend` into the shell first, so no `.env` file is needed. On the NAS (Container Manager, no shell), `.env` must be a manually maintained merge of the two files — **forgetting to re-merge after editing either file is what caused a prior production outage** (Compose interpolated empty DB credentials, Postgres refused to start, backend never connected).
@@ -43,8 +43,9 @@ Compose only auto-loads a file literally named `.env` for its own `${VAR}` inter
 
 - `.ssh/` and `auth-config.json` exist in this working copy but are gitignored — never read, print, or reference their contents.
 - GitHub auth for the git clone steps used to go through BuildKit's reserved `GIT_AUTH_TOKEN` build secret (Compose's `build.secrets`), but Synology Container Manager's compose build rejects `build.secrets` as an invalid property and doesn't honor `DOCKER_BUILDKIT=1` to fix it — its build doesn't go through BuildKit at all. So `GIT_AUTH_TOKEN` is now a plain build `ARG`, declared only in the discarded builder stage of `backend/Dockerfile`/`frontend/Dockerfile`, and passed to `git clone` via `-c http.extraheader=...` (never a URL) so it never appears in build logs or in git's own output. It does still end up in that builder stage's `docker history` (not the final runtime image) — the standard tradeoff when BuildKit secrets aren't available. Do not log build output that would echo it, and don't add `RUN echo`-style debugging around the clone step or reintroduce a URL-embedded credential.
+- The same `GIT_AUTH_TOKEN` is also used by `../deploy/tag-release.sh` to create tags and refs via the GitHub REST API (`git/refs`, `git/tags`) on both source repos, so it needs push/write scope there, not just read — it's passed as a `Bearer` header on those API calls, same never-in-a-URL principle as the clone step.
 - `db-restore.sh` runs `DROP SCHEMA public CASCADE` before restoring — treat it as destructive; only run it (or suggest running it) with explicit user confirmation, same bar as other destructive git/db operations.
 
 ## Making Changes Here
 
-This repo only owns Dockerfiles, `docker-compose.yml`, the Makefile, and the db backup/restore scripts. Application logic changes belong in `meal-planner-backend/` or `meal-planner/` (see root [`CLAUDE.md`](../CLAUDE.md)) — only touch this repo for deployment/infra changes (new services, env vars, nginx routing, healthchecks, base image bumps).
+This repo only owns Dockerfiles, `docker-compose.yml`, the Makefile, and the db backup/restore scripts. Application logic changes belong in `meal-planner-backend/` or `meal-planner/` (see root [`CLAUDE.md`](../CLAUDE.md)) — only touch this repo for deployment/infra changes (new services, env vars, nginx routing, healthchecks, base image bumps). `../deploy/tag-release.sh` lives outside this repo, in the umbrella repo's `deploy/` folder — it's referenced from here (Makefile, docs) but not owned or version-controlled by this repo.

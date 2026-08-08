@@ -31,7 +31,7 @@ services:
       network: host
       args:
         GIT_AUTH_TOKEN: ${GIT_AUTH_TOKEN}
-        CACHEBUST: ${CACHEBUST:-1}
+        GIT_REF: ${BACKEND_GIT_REF:-main}
     env_file:
       - .env.backend
     container_name: meal-planner-backend
@@ -61,7 +61,7 @@ services:
       dockerfile: Dockerfile
       args:
         GIT_AUTH_TOKEN: ${GIT_AUTH_TOKEN}
-        CACHEBUST: ${CACHEBUST:-1}
+        GIT_REF: ${FRONTEND_GIT_REF:-main}
         VITE_APP_API_BASE_URL: ${API_BASE_URL:-/api}
         VITE_APP_FIREBASE_API_KEY: ${FIREBASE_API_KEY}
         VITE_APP_FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}

@@ -32,7 +32,7 @@ RUN AUTH_HEADER="AUTHORIZATION: basic $(printf '%s' "x-access-token:${GIT_AUTH_T
 
 # Record the commit and verify the clone succeeded
 RUN COMMIT_HASH=`git -C /app rev-parse HEAD 2>/dev/null || echo "unknown"` && \
-    echo "✓ Cloned meal-planner-backend (commit: ${COMMIT_HASH})" && \
+    echo "✓ Cloned meal-planner-backend (tag: ${GIT_REF})" && \
     if [ ! -f /app/go.mod ]; then \
         echo "ERROR: Repository clone failed - go.mod not found"; \
         exit 1; \

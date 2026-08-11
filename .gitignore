@@ -1,5 +1,4 @@
 .env*
-.deploy-tags.env
 .github_token.secret
 .ssh/
 

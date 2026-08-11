@@ -13,12 +13,11 @@ check-env:
 tag-release: check-env
 	../deploy/tag-release.sh
 
-up: tag-release
-	set -a; . ./.env.backend; . ./.env.frontend; . ./.deploy-tags.env; set +a; \
-	docker compose build && docker compose up -d
+up: check-env
+	../deploy/deploy-latest.sh
 
 down: check-env
-	set -a; . ./.env.backend; . ./.env.frontend; set +a; \
+	set -a; . ./.env.backend; . ./.env.frontend; BACKEND_GIT_REF=unused; FRONTEND_GIT_REF=unused; set +a; \
 	docker compose down --rmi local
 
 restart:

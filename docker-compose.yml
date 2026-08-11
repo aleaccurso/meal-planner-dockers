@@ -31,7 +31,6 @@ services:
       network: host
       args:
         GIT_AUTH_TOKEN: "${GIT_AUTH_TOKEN:?GIT_AUTH_TOKEN not set - set it in .env.backend}"
-        GIT_REF: "${BACKEND_GIT_REF:?BACKEND_GIT_REF not set - run deploy/deploy-latest.sh, do not call docker compose build directly}"
     env_file:
       - .env.backend
     container_name: meal-planner-backend
@@ -57,7 +56,8 @@ services:
       dockerfile: Dockerfile
       args:
         GIT_AUTH_TOKEN: "${GIT_AUTH_TOKEN:?GIT_AUTH_TOKEN not set - set it in .env.backend}"
-        GIT_REF: "${FRONTEND_GIT_REF:?FRONTEND_GIT_REF not set - run deploy/deploy-latest.sh, do not call docker compose build directly}"
+        # GIT_REF intentionally not listed here - passed via
+        # `docker compose build --build-arg` in deploy/deploy-latest.sh instead
         VITE_APP_API_BASE_URL: ${API_BASE_URL:-/api}
         VITE_APP_FIREBASE_API_KEY: ${FIREBASE_API_KEY}
         VITE_APP_FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}

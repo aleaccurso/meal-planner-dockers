@@ -17,7 +17,7 @@ up: check-env
 	../deploy/deploy-latest.sh
 
 down: check-env
-	set -a; . ./.env.backend; . ./.env.frontend; BACKEND_GIT_REF=unused; FRONTEND_GIT_REF=unused; set +a; \
+	set -a; . ./.env.backend; . ./.env.frontend; set +a; \
 	docker compose down --rmi local
 
 restart:

@@ -59,11 +59,9 @@ resolve_head() {
 
 resolve_head "$BACKEND_REPO"
 BACKEND_SHA="$HEAD_SHA"
-echo "backend: deploying ${BACKEND_SHA} (main HEAD)" >&2
 
 resolve_head "$FRONTEND_REPO"
 FRONTEND_SHA="$HEAD_SHA"
-echo "frontend: deploying ${FRONTEND_SHA} (main HEAD)" >&2
 
 cd "$DOCKERS_DIR"
 
@@ -80,12 +78,12 @@ docker compose build --build-arg GIT_REF="$FRONTEND_SHA" frontend
 docker compose up -d --wait
 
 tag_commit_if_needed "$BACKEND_REPO" "$BACKEND_SHA" BACKEND_TAG
-[ "$TAG_WAS_NEW" = "1" ] && BACKEND_TAG="${BACKEND_TAG}*"
+BACKEND_TAG="${BACKEND_TAG} - $([ "$TAG_WAS_NEW" = "1" ] && echo new || echo reused)"
 
 tag_commit_if_needed "$FRONTEND_REPO" "$FRONTEND_SHA" FRONTEND_TAG
-[ "$TAG_WAS_NEW" = "1" ] && FRONTEND_TAG="${FRONTEND_TAG}*"
+FRONTEND_TAG="${FRONTEND_TAG} - $([ "$TAG_WAS_NEW" = "1" ] && echo new || echo reused)"
 
-# A trailing '*' on the tag means it was newly minted by this run (not a
-# pre-existing tag being reused because this commit was already deployed).
+# '- new' means the tag was newly minted by this run; '- reused' means a
+# pre-existing tag was reused because this commit was already deployed.
 echo "backend: ${BACKEND_SHA} (${BACKEND_TAG})" >&2
 echo "frontend: ${FRONTEND_SHA} (${FRONTEND_TAG})" >&2

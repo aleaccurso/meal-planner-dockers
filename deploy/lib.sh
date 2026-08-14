@@ -198,7 +198,6 @@ tag_commit_if_needed() {
     if [ -n "$LATEST_TAG_SHA" ] && [ "$LATEST_TAG_SHA" = "$sha" ]; then
         ref_to_use="$LATEST_TAG_NAME"
         TAG_WAS_NEW="0"
-        echo "${repo}: ${sha} already tagged as ${ref_to_use}, reusing" >&2
     else
         acquire_lock "$repo" "$sha"
         # Re-check under the lock in case another machine minted a tag for
@@ -207,7 +206,6 @@ tag_commit_if_needed() {
         if [ -n "$LATEST_TAG_SHA" ] && [ "$LATEST_TAG_SHA" = "$sha" ]; then
             ref_to_use="$LATEST_TAG_NAME"
             TAG_WAS_NEW="0"
-            echo "${repo}: ${sha} already tagged as ${ref_to_use} (minted concurrently), reusing" >&2
         else
             next_tag=$(compute_next_tag "$LATEST_TAG_NAME")
             gh_request POST "/repos/${repo}/git/refs" \
@@ -215,7 +213,6 @@ tag_commit_if_needed() {
             [ "$GH_STATUS" = "201" ] || fail "could not create tag ${next_tag} for ${repo} (HTTP ${GH_STATUS}): ${GH_BODY}"
             ref_to_use="$next_tag"
             TAG_WAS_NEW="1"
-            echo "${repo}: created ${ref_to_use} (${sha})" >&2
         fi
         release_lock
     fi

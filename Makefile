@@ -10,11 +10,8 @@ check-env:
 	@test -f .env.frontend || (echo "ERROR: .env.frontend not found" && exit 1)
 	@grep -q '^GIT_AUTH_TOKEN=' .env.backend || (echo "ERROR: GIT_AUTH_TOKEN not set in .env.backend" && exit 1)
 
-tag-release: check-env
-	../deploy/tag-release.sh
-
 up: check-env
-	../deploy/deploy-latest.sh
+	./deploy/deploy.sh
 
 down: check-env
 	set -a; . ./.env.backend; . ./.env.frontend; set +a; \

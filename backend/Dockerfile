@@ -21,18 +21,28 @@ WORKDIR /app
 # output. It still ends up in this builder stage's `docker history` (not
 # the final image) - the standard pre-BuildKit-secrets tradeoff.
 ARG GIT_AUTH_TOKEN
-# GIT_REF (compose build arg, see docker-compose.yml) selects which tag to
-# clone. deploy/tag-release.sh mints a unique tag name for every real build,
-# so referencing GIT_REF directly in the clone command below makes it part of
-# this layer's cache key - Docker only re-clones when the ref actually changes.
+# GIT_REPO (compose build arg, see docker-compose.yml, sourced from
+# BACKEND_REPO in .env.backend) is the "owner/repo" to clone - kept out of
+# this Dockerfile (rather than hardcoded) so the repo name never appears in
+# a committed, potentially public file.
+ARG GIT_REPO
+# GIT_REF (compose build arg, see docker-compose.yml) selects which commit to
+# clone - deploy/deploy.sh always passes the actual current main HEAD commit
+# SHA, not a branch or tag name. Fetching by SHA (rather than `git clone
+# --branch`, which only accepts branches/tags) works because GitHub allows
+# fetching any reachable commit over the smart HTTP protocol. Referencing
+# GIT_REF directly in the RUN command below makes it part of this layer's
+# cache key, so Docker only re-clones when the commit actually changes.
 ARG GIT_REF=main
 RUN AUTH_HEADER="AUTHORIZATION: basic $(printf '%s' "x-access-token:${GIT_AUTH_TOKEN}" | base64 -w0)" && \
-    git clone -c http.extraheader="${AUTH_HEADER}" --branch ${GIT_REF} --single-branch \
-      https://github.com/aleaccurso/meal-planner-backend.git /app
+    mkdir -p /app && cd /app && git init -q && \
+    git remote add origin "https://github.com/${GIT_REPO}.git" && \
+    git -c http.extraheader="${AUTH_HEADER}" fetch --depth 1 origin ${GIT_REF} && \
+    git checkout -q FETCH_HEAD
 
 # Record the commit and verify the clone succeeded
 RUN COMMIT_HASH=`git -C /app rev-parse HEAD 2>/dev/null || echo "unknown"` && \
-    echo "✓ Cloned meal-planner-backend (tag: ${GIT_REF})" && \
+    echo "✓ Cloned ${GIT_REPO} (ref: ${GIT_REF})" && \
     if [ ! -f /app/go.mod ]; then \
         echo "ERROR: Repository clone failed - go.mod not found"; \
         exit 1; \

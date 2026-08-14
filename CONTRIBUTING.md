@@ -22,9 +22,7 @@ Thank you for your interest in contributing to the Meal Planner Docker setup! Th
 - **Docker Compose** (version 2.0 or higher)
 - **Git**
 - **Make** (optional, for using Makefile commands)
-- A GitHub account with access to the repositories:
-  - `aleaccurso/meal-planner-backend`
-  - `aleaccurso/meal-planner`
+- A GitHub account with access to the backend and frontend source repositories (see `BACKEND_REPO`/`FRONTEND_REPO` below)
 
 ### Environment Setup
 
@@ -55,6 +53,7 @@ Thank you for your interest in contributing to the Meal Planner Docker setup! Th
    USERS_AVATAR_FOLDER=./avatars
    RECIPES_IMAGES_FOLDER=./recipe-images
    GIT_AUTH_TOKEN=your_github_personal_access_token
+   BACKEND_REPO=owner/meal-planner-backend
    # plus AI keys (GEMINI_API_KEY, CLAUDE_API_KEY, ...) and SMTP creds
    ```
 
@@ -63,6 +62,7 @@ Thank you for your interest in contributing to the Meal Planner Docker setup! Th
    API_BASE_URL=/api
    USERS_AVATAR_FOLDER=./avatars
    RECIPES_IMAGES_FOLDER=./recipe-images
+   FRONTEND_REPO=owner/meal-planner
    # plus FIREBASE_* vars
    ```
 

@@ -65,7 +65,7 @@ services:
         GIT_AUTH_TOKEN: "${GIT_AUTH_TOKEN:?GIT_AUTH_TOKEN not set - set it in .env.backend}"
         GIT_REPO: "${FRONTEND_REPO:?FRONTEND_REPO not set - set it in .env.frontend}"
         # GIT_REF intentionally not listed here - passed via
-        # `docker compose build --build-arg` in deploy/deploy.sh instead
+        # `docker compose build --build-arg` in scripts/deploy.sh / scripts/up.sh instead
         VITE_APP_API_BASE_URL: ${API_BASE_URL:-/api}
         VITE_APP_FIREBASE_API_KEY: ${FIREBASE_API_KEY}
         VITE_APP_FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}

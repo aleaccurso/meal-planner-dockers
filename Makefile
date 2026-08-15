@@ -1,4 +1,5 @@
 .PHONY: up
+.PHONY: deploy
 .PHONY: down
 .PHONY: restart
 .PHONY: check-env
@@ -11,11 +12,13 @@ check-env:
 	@grep -q '^GIT_AUTH_TOKEN=' .env.backend || (echo "ERROR: GIT_AUTH_TOKEN not set in .env.backend" && exit 1)
 
 up: check-env
-	./deploy/deploy.sh
+	./scripts/up.sh
+
+deploy: check-env
+	./scripts/deploy.sh
 
 down: check-env
-	set -a; . ./.env.backend; . ./.env.frontend; set +a; \
-	docker compose down --rmi local
+	./scripts/down.sh
 
 restart:
 	$(MAKE) down && $(MAKE) up

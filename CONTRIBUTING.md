@@ -79,13 +79,18 @@ Thank you for your interest in contributing to the Meal Planner Docker setup! Th
 Use the Makefile commands:
 
 ```bash
-# Build and start all services
+# Build main HEAD of backend/frontend from GitHub and tag it, then start
+make deploy
+
+# Start (or restart) from the last tag created by `make deploy` - no
+# rebuild from source, fails if nothing has been deployed yet
 make up
 
 # Stop all services
 make down
 
-# Restart all services
+# down + up (last tag, no rebuild) - use `make deploy` instead if you need
+# your latest source changes picked up
 make restart
 ```
 
@@ -218,8 +223,8 @@ chore: update base image versions
 3. **Test your changes**
 
    ```bash
-   # Rebuild and restart services
-   make restart
+   # Build main HEAD of backend/frontend (picks up your pushed changes) and tag it
+   make deploy
 
    # Verify services are running
    docker compose ps
@@ -227,6 +232,10 @@ chore: update base image versions
    # Check logs for errors
    docker compose logs
    ```
+
+   Note: `make restart`/`make up` intentionally do **not** rebuild from source — they
+   just restart from the last tag `make deploy` created. Use `make deploy` whenever
+   you need your latest commit picked up.
 
 4. **Commit your changes**
 
@@ -331,7 +340,9 @@ make restart
 1. **Start all services**
 
    ```bash
-   make up
+   # First time (or to pick up new source commits): make deploy
+   # Otherwise, to just restart from the last tag: make up
+   make deploy
    ```
 
 2. **Verify services are running**
@@ -382,7 +393,7 @@ If you need help:
 ### Common Questions
 
 **Q: How do I update the backend/frontend code?**
-A: The Dockerfiles clone from GitHub during build. Update the code in the respective repositories, then rebuild the containers.
+A: The Dockerfiles clone from GitHub during build. Update the code in the respective repositories, push to `main`, then run `make deploy` to build+tag that HEAD commit. `make restart`/`make up` won't pick up new commits — they only restart from the last tag `make deploy` created.
 
 **Q: How do I change environment variables?**
 A: Update `.env.backend`/`.env.frontend` and restart the services with `make restart`. (On the NAS, also re-merge `.env` — see the root README.)

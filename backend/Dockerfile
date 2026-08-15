@@ -27,8 +27,10 @@ ARG GIT_AUTH_TOKEN
 # a committed, potentially public file.
 ARG GIT_REPO
 # GIT_REF (compose build arg, see docker-compose.yml) selects which commit to
-# clone - deploy/deploy.sh always passes the actual current main HEAD commit
-# SHA, not a branch or tag name. Fetching by SHA (rather than `git clone
+# clone - scripts/deploy.sh passes the actual current main HEAD commit SHA,
+# scripts/up.sh passes the SHA of the latest existing release tag instead;
+# either way it's always a commit SHA, not a branch or tag name. Fetching by
+# SHA (rather than `git clone
 # --branch`, which only accepts branches/tags) works because GitHub allows
 # fetching any reachable commit over the smart HTTP protocol. Referencing
 # GIT_REF directly in the RUN command below makes it part of this layer's

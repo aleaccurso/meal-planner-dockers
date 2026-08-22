@@ -163,7 +163,7 @@ acquire_lock() {
 
 compute_next_tag() {
     local last_name="$1" today last_date last_n
-    today="$(date -u +%Y.%m.%d)"
+    today="$(date +%Y.%m.%d)"
     if [ -z "$last_name" ]; then
         printf 'v%s.1' "$today"
         return

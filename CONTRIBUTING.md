@@ -114,13 +114,13 @@ docker compose logs -f db
 
 ### Accessing the Services
 
-- **Frontend**: http://localhost:${FRONTEND_PORT}
+- **Frontend**: http://localhost:5173 (hardcoded in `docker-compose.yml`, not env-driven)
 - **Backend API**: http://localhost:${BACKEND_PORT}
 - **Database**: localhost:${DB_PORT}
 
 ## Project Structure
 
-```
+```text
 meal-planner-dockers/
 ├── backend/
 │   └── Dockerfile          # Backend service Dockerfile
@@ -176,7 +176,7 @@ meal-planner-dockers/
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
-```
+```text
 <type>([optional scope]): <description>
 
 [optional body]
@@ -186,18 +186,20 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 
 ### Types
 
-- `feat`: A new feature
-- `fix`: A bug fix
-- `docs`: Documentation only changes
-- `style`: Changes that do not affect the meaning of the code
-- `refactor`: A code change that neither fixes a bug nor adds a feature
-- `perf`: A code change that improves performance
-- `test`: Adding missing tests or correcting existing tests
-- `chore`: Changes to the build process or auxiliary tools
+| Type       | Meaning                                                   |
+| ---------- | --------------------------------------------------------- |
+| `feat`     | A new feature                                             |
+| `fix`      | A bug fix                                                 |
+| `docs`     | Documentation only changes                                |
+| `style`    | Changes that do not affect the meaning of the code        |
+| `refactor` | A code change that neither fixes a bug nor adds a feature |
+| `perf`     | A code change that improves performance                   |
+| `test`     | Adding missing tests or correcting existing tests         |
+| `chore`    | Changes to the build process or auxiliary tools           |
 
 ### Examples
 
-```
+```text
 feat(docker): add health check for backend service
 fix(nginx): resolve API proxy configuration issue
 docs: update README with environment variable examples
@@ -233,7 +235,7 @@ chore: update base image versions
    docker compose logs
    ```
 
-   Note: `make restart`/`make up` intentionally do **not** rebuild from source — they
+   `make restart`/`make up` intentionally do **not** rebuild from source — they
    just restart from the last tag `make deploy` created. Use `make deploy` whenever
    you need your latest commit picked up.
 
@@ -396,7 +398,7 @@ If you need help:
 A: The Dockerfiles clone from GitHub during build. Update the code in the respective repositories, push to `main`, then run `make deploy` to build+tag that HEAD commit. `make restart`/`make up` won't pick up new commits — they only restart from the last tag `make deploy` created.
 
 **Q: How do I change environment variables?**
-A: Update `.env.backend`/`.env.frontend` and restart the services with `make restart`. (On the NAS, also re-merge `.env` — see the root README.)
+A: Update `.env.backend`/`.env.frontend` and restart the services with `make restart`. This is the same on the NAS — deployment there goes through the same scripts over SSH, with no Container Manager GUI build path and no manual `.env` merge step (that path was removed after it caused a production outage).
 
 **Q: How do I access the database directly?**
 A: Use `docker compose exec db psql -U postgres -d meal_planner` or connect from a database client to `localhost:5432`.
@@ -406,7 +408,7 @@ A: This repository is specifically for Docker deployment. For local development,
 
 ## Code of Conduct
 
-Please note that this project follows a Code of Conduct. By participating, you are expected to uphold this code.
+This project follows a Code of Conduct. By participating, you are expected to uphold this code.
 
 ## License
 
@@ -415,5 +417,3 @@ By contributing to this project, you agree that your contributions will be licen
 ---
 
 Thank you for contributing to Meal Planner Dockers! 🐳
-
-

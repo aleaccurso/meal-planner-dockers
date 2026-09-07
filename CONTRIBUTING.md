@@ -54,7 +54,7 @@ Thank you for your interest in contributing to the Meal Planner Docker setup! Th
    RECIPES_IMAGES_FOLDER=./recipe-images
    GIT_AUTH_TOKEN=your_github_personal_access_token
    BACKEND_REPO=owner/meal-planner-backend
-   # plus AI keys (GEMINI_API_KEY, CLAUDE_API_KEY, ...) and SMTP creds
+   # plus AI keys (AI_SERVICE, DEEPSEEK_API_KEY, DEEPSEEK_MODEL) and SMTP creds
    ```
 
    ```env

@@ -57,6 +57,10 @@ resolve_head() {
     [ -n "$HEAD_SHA" ] || fail "could not parse main HEAD sha for ${repo}"
 }
 
+# Promote dev to main on GitHub first so the HEAD resolved below includes it.
+merge_dev_into_main "$BACKEND_REPO"
+merge_dev_into_main "$FRONTEND_REPO"
+
 resolve_head "$BACKEND_REPO"
 BACKEND_SHA="$HEAD_SHA"
 

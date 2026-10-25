@@ -55,6 +55,20 @@ gh_request() {
     GH_BODY=$(printf '%s' "$raw" | sed '$d')
 }
 
+merge_dev_into_main() {
+    # merge_dev_into_main <owner/repo>
+    # GitHub merges API: 201 = merged, 204 = main already contains dev,
+    # 409 = conflict (resolve by hand, nothing is forced).
+    local repo="$1"
+    gh_request POST "/repos/${repo}/merges" \
+        '{"base":"main","head":"dev","commit_message":"Merge dev into main (deploy)"}'
+    case "$GH_STATUS" in
+        201) echo "${repo}: merged dev into main" >&2 ;;
+        204) echo "${repo}: main already up to date with dev" >&2 ;;
+        *) fail "could not merge dev into main for ${repo} (HTTP ${GH_STATUS}): ${GH_BODY}" ;;
+    esac
+}
+
 # ---- tag lookup ----
 
 LATEST_TAG_NAME=""

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- Build stage ----
-FROM golang:1.25.3 AS builder
+FROM golang:1.27.2 AS builder
 
 # Git is pre-installed in Debian-based golang image
 # No need to install it separately
@@ -59,7 +59,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 # ---- Runtime stage ----
-FROM alpine:3.19
+FROM alpine:3.20
 
 # Build arg for port (must be redeclared in this stage)
 ARG BACKEND_PORT

@@ -1,5 +1,7 @@
 # Meal Planner Dockers — Claude Context
 
+See `docs/README.md` for expanded documentation (architecture, code style, operations, and open recommendations).
+
 ## Project
 
 Docker Compose deployment for the Meal Planner app: `db` (PostgreSQL), `backend` (Go API), `frontend` (React SPA served by Nginx). This repo does not contain application source — the backend and frontend Dockerfiles `git clone` (by fetching a specific ref/SHA) the repos named by `BACKEND_REPO`/`FRONTEND_REPO` (`.env.backend`, gitignored — repo names are never hardcoded in any committed file) directly from GitHub during the image build, at a `GIT_REF` build arg pinned to either that repo's actual current `main` HEAD commit (`scripts/deploy.sh`) or its most recent existing release tag (`scripts/up.sh`) — see Key Commands — rather than a floating branch. Neither `GIT_REF` nor `GIT_REPO` is a `docker-compose.yml` variable with a literal value — `GIT_REPO` is interpolated from `BACKEND_REPO`/`FRONTEND_REPO`, and `GIT_REF` is passed per service directly on the `docker compose build --build-arg GIT_REF=... <service>` command line by `scripts/deploy.sh`/`scripts/up.sh`.
@@ -23,7 +25,7 @@ Building and tagging are a single step, in that order: build first, tag only aft
 
 - **db**: `postgres:15`, healthchecked, data persisted to `${DB_DATA_PATH}`.
 - **backend**: multi-stage `golang:1.25.3` build → `alpine:3.19` runtime, non-root user, depends on `db` being healthy, healthchecked (`nc -z localhost 8010`). Clones `BACKEND_REPO`.
-- **frontend**: multi-stage `node:25` build → `nginx:alpine` runtime, healthchecked (`wget --spider` against `/`). Clones `FRONTEND_REPO`. `frontend/nginx.conf` is a template — `VITE_APP_BACKEND_HOST`/`VITE_APP_BACKEND_PORT` are substituted at container start via `envsubst`, and it proxies `/api/` to the backend service.
+- **frontend**: multi-stage `node:26` build → `nginx:alpine` runtime, healthchecked (`wget --spider` against `/`). Clones `FRONTEND_REPO`. `frontend/nginx.conf` is a template — `VITE_APP_BACKEND_HOST`/`VITE_APP_BACKEND_PORT` are substituted at container start via `envsubst`, and it proxies `/api/` to the backend service.
 
 Networks: `mealplanner_backend_network` (db ↔ backend) and `mealplanner_app_network` (backend ↔ frontend) — kept separate so the frontend container has no direct route to the db.
 
@@ -49,4 +51,4 @@ Compose only auto-loads a file literally named `.env` for its own `${VAR}` inter
 
 ## Making Changes Here
 
-This repo owns Dockerfiles, `docker-compose.yml`, the Makefile, and `scripts/` (`deploy.sh`, `up.sh`, `down.sh`, `lib.sh`, plus the db backup/restore scripts). Application logic changes belong in `meal-planner-backend/` or `meal-planner/` (see root [`CLAUDE.md`](../CLAUDE.md)) — only touch this repo for deployment/infra changes (new services, env vars, nginx routing, healthchecks, base image bumps, or the deploy pipeline itself).
+This repo owns Dockerfiles, `docker-compose.yml`, the Makefile, and `scripts/` (`deploy.sh`, `up.sh`, `down.sh`, `lib.sh`, plus the db backup/restore scripts). Application logic changes belong in `meal-planner-backend/` or `meal-planner/` (see root `CLAUDE.md`) — only touch this repo for deployment/infra changes (new services, env vars, nginx routing, healthchecks, base image bumps, or the deploy pipeline itself).

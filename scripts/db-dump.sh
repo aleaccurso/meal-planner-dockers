@@ -44,8 +44,9 @@ elif [ "$ENVIRONMENT" = "PRODUCTION" ]; then
         exit 1
     fi
     echo "Dumping production PostgreSQL database '$DB_NAME' on Synology NAS ($DB_HOST)..."
-    PGPASSWORD="$DB_USER_PASSWORD" pg_dump \
-        -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" > "$DUMP_FILE"
+    # Run pg_dump from a postgres:15 image so the client version matches the server
+    docker run --rm -e PGPASSWORD="$DB_USER_PASSWORD" postgres:15 \
+        pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" > "$DUMP_FILE"
 else
     echo "Unknown ENVIRONMENT: '$ENVIRONMENT'. Expected LOCAL, LOCAL_DOCKER, or PRODUCTION."
     exit 1
